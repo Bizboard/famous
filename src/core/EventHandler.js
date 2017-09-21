@@ -148,7 +148,6 @@ define(function(require, exports, module) {
    *
    * @param {string} type event type key (for example, 'click')
    * @param {function(string, Object)} handler callback
-<<<<<<< HEAD
    * @param {Object} options options
    * @param {Boolean} [options.propagate] defaults to true. If the events should bubble
    * @return {EventHandler} this
@@ -159,7 +158,7 @@ define(function(require, exports, module) {
     if(listenUpstream === undefined){
       listenUpstream = true;
     }
-    EventEmitter.prototype.on.call(this, type, handler, listenUpstream);
+    EventEmitter.prototype.on.call(this, type, handler, options);
     if (!(type in this.upstreamListeners) && listenUpstream) {
       var upstreamListener = this.emit.bind(this, type);
       /* Make sure that the options are passed along */
