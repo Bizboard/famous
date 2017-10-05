@@ -47,7 +47,7 @@ define(function (require, exports, module) {
     if(!eventEmitter){
       eventEmitter = initializedListeners[type] = new EventEmitter();
       window.addEventListener(type, function (event) {
-        var target = event.relatedTarget || event.target;
+        var target = event.target;
         var receivedID = target && target.getAttribute && target.getAttribute('data-arvaid');
         if(receivedID){
           eventEmitter.emit(receivedID, event);
