@@ -22,8 +22,10 @@ define(function(require, exports, module) {
 
     var Surface = require('famous/core/Surface');
     var DOMBuffer = require('famous/core/DOMBuffer');
+    var staticInherits = require('../utilities/StaticInherit.js').staticInherits;
 
-    /**
+
+  /**
      * @enum
      * @alias module:BgImageSurface.SizeMode
      */
@@ -73,14 +75,10 @@ define(function(require, exports, module) {
     function BgImageSurface(options) {
         Surface.apply(this, arguments);
         this.content = undefined;
-        this._imageUrl = options ? options.content : undefined;
-        this._sizeMode = (options && options.sizeMode) ? options.sizeMode : SizeMode.FILL;
-        this._positionMode = (options && options.positionMode) ? options.positionMode : PositionMode.CENTER;
-        this._repeatMode = (options && options.repeatMode) ? options.repeatMode : RepeatMode.NONE;
-
         this._updateProperties();
     }
-    BgImageSurface.prototype = Object.create(Surface.prototype);
+
+    staticInherits(BgImageSurface, Surface);
     BgImageSurface.prototype.constructor = BgImageSurface;
     BgImageSurface.prototype.elementType = 'div';
     BgImageSurface.prototype.elementClass = 'famous-surface';
@@ -88,13 +86,23 @@ define(function(require, exports, module) {
     BgImageSurface.PositionMode = PositionMode;
     BgImageSurface.RepeatMode = RepeatMode;
 
+  BgImageSurface.prototype.setNewOptions = function setNewOptions(options){
+    Surface.prototype.setNewOptions.call(this, options);
+    this._updateProperties();
+  };
+
     /**
      * Update the css-styles on the div.
      *
      * @private
      */
     BgImageSurface.prototype._updateProperties = function() {
-        var props = this.getProperties();
+        var options = this.options;
+        this._imageUrl = options ? options.content : undefined;
+        this._sizeMode = (options && options.sizeMode) ? options.sizeMode : SizeMode.FILL;
+        this._positionMode = (options && options.positionMode) ? options.positionMode : PositionMode.CENTER;
+        this._repeatMode = (options && options.repeatMode) ? options.repeatMode : RepeatMode.NONE;
+        var props = {};
         if (this._imageUrl) {
             var imageUrl = this._imageUrl;
             // url encode '(' and ')'
