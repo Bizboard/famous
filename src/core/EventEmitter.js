@@ -55,15 +55,19 @@ define(function (require, exports, module) {
   EventEmitter.prototype.determineSurpressedTouchMoveEvents = function determineSurpressedTouchMoveEvents(eventType, handlers, event) {
     /* If the number of touches is more than 2, then we should not surpress any events */
     var numberOfHandlers = handlers ? handlers.length : 0;
-    if (numberOfHandlers < 2 || !(event instanceof window.TouchEvent) || event.touches.length > 1 || !['touchstart', 'touchmove', 'touchend'].includes(eventType)) {
+    if (typeof window.TouchEvent === 'undefined' || numberOfHandlers < 2 || !(event instanceof window.TouchEvent) || event.touches.length > 1 || !['touchstart', 'touchmove', 'touchend'].includes(eventType)) {
       return new Array(numberOfHandlers).fill(false);
     }
 
     /* Plural of axis is axes */
-    var axes = handlers.map((handler) => handler._handlerOptions ? handler._handlerOptions.axis : undefined);
+    var axes = handlers.map(function (handler) {
+      return handler._handlerOptions ? handler._handlerOptions.axis : undefined
+    });
     var firstAxis = axes[0];
     /* If all the axes are the same */
-    if (axes.every((axis) => axis === firstAxis || axis === undefined)) {
+    if (axes.every(function (axis) {
+        return axis === firstAxis || axis === undefined;
+      })) {
       return new Array(numberOfHandlers).fill(false);
     }
     var touch = event.touches[0];
@@ -76,7 +80,7 @@ define(function (require, exports, module) {
       this._currentTouchMoveDirection = undefined;
     }
 
-    if(eventType !== 'touchmove'){
+    if (eventType !== 'touchmove') {
       return new Array(numberOfHandlers).fill(false);
     }
 
