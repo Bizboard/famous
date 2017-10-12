@@ -125,7 +125,8 @@ define(function(require, exports, module) {
      * @param {String} imageUrl Image-url, when set will cause re-rendering
      */
     BgImageSurface.prototype.setContent = function(imageUrl) {
-        this._imageUrl = imageUrl;
+        this.options.content = imageUrl;
+        this._contentDirty = true;
         this._updateProperties();
     };
 
