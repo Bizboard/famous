@@ -192,8 +192,8 @@ define(function(require, exports, module) {
     let propagate = options.propagate;
     if(propagate === undefined)
       propagate = true;
-    EventEmitter.prototype.once.call(this, type, handler, {propagate: propagate});
-    return this;
+    return EventEmitter.prototype.once.call(this, type, handler, {propagate: propagate});
+
   };
 
   /**
