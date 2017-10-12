@@ -1,14 +1,17 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var EventHandler = require('../../core/EventHandler');
+
+import EventHandler from '../../core/EventHandler.js';
+
+export default class Constraint {
 
     /**
      *  Allows for two circular bodies to collide and bounce off each other.
@@ -18,7 +21,7 @@ define(function(require, exports, module) {
      *  @uses EventHandler
      *  @param options {Object}
      */
-    function Constraint() {
+    constructor() {
         this.options = this.options || {};
         this._eventOutput = new EventHandler();
         EventHandler.setOutputHandler(this, this._eventOutput);
@@ -30,16 +33,16 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param options {Objects}
      */
-    Constraint.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         this._eventOutput.emit('change', options);
-    };
+    }
 
     /**
      * Adds an impulse to a physics body's velocity due to the constraint
      *
      * @method applyConstraint
      */
-    Constraint.prototype.applyConstraint = function applyConstraint() {};
+    applyConstraint() {};
 
     /**
      * Getter for energy
@@ -47,9 +50,7 @@ define(function(require, exports, module) {
      * @method getEnergy
      * @return energy {Number}
      */
-    Constraint.prototype.getEnergy = function getEnergy() {
+    getEnergy() {
         return 0.0;
-    };
-
-    module.exports = Constraint;
-});
+    }
+}

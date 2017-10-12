@@ -1,22 +1,14 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    /**
-     * This namespace holds standalone functionality.
-     *  Currently includes name mapping for transition curves,
-     *  name mapping for origin pairs, and the after() function.
-     *
-     * @class Utility
-     * @static
-     */
-    var Utility = {};
+export default class Utility {
 
     /**
      * Table of direction array positions
@@ -24,11 +16,11 @@ define(function(require, exports, module) {
      * @property {object} Direction
      * @final
      */
-    Utility.Direction = {
+    static Direction = {
         X: 0,
         Y: 1,
         Z: 2
-    };
+    }
 
     /**
      * Return wrapper around callback function. Once the wrapper is called N
@@ -41,13 +33,13 @@ define(function(require, exports, module) {
      *
      * @return {function} wrapped callback with coundown feature
      */
-    Utility.after = function after(count, callback) {
+    static after(count, callback) {
         var counter = count;
         return function() {
             counter--;
             if (counter === 0) callback.apply(this, arguments);
         };
-    };
+    }
 
     /**
      * Load a URL and return its contents in a callback
@@ -57,7 +49,7 @@ define(function(require, exports, module) {
      * @param {string} url URL of object
      * @param {function} callback callback to dispatch with content
      */
-    Utility.loadURL = function loadURL(url, callback) {
+    static loadURL(url, callback) {
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function onreadystatechange() {
             if (this.readyState === 4) {
@@ -66,7 +58,7 @@ define(function(require, exports, module) {
         };
         xhr.open('GET', url);
         xhr.send();
-    };
+    }
 
     /**
      * Create a document fragment from a string of HTML
@@ -77,20 +69,20 @@ define(function(require, exports, module) {
      *
      * @return {DocumentFragment} DocumentFragment representing input HTML
      */
-    Utility.createDocumentFragmentFromHTML = function createDocumentFragmentFromHTML(html) {
+    static createDocumentFragmentFromHTML(html) {
         var element = document.createElement('div');
         element.innerHTML = html;
         var result = document.createDocumentFragment();
         while (element.hasChildNodes()) result.appendChild(element.firstChild);
         return result;
-    };
+    }
 
     /*
      *  Deep clone an object.
      *  @param b {Object} Object to clone
      *  @return a {Object} Cloned object.
      */
-    Utility.clone = function clone(b) {
+    static clone(b) {
         var a;
         if (typeof b === 'object') {
             a = (b instanceof Array) ? [] : {};
@@ -115,7 +107,5 @@ define(function(require, exports, module) {
             a = b;
         }
         return a;
-    };
-
-    module.exports = Utility;
-});
+    }
+}

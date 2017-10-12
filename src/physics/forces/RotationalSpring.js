@@ -1,17 +1,19 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
+import Force from './Force.js';
+import Spring from './Spring.js';
+import Quaternion from '../../math/Quaternion.js';
+
 //TODO: test inheritance
-define(function(require, exports, module) {
-    var Force = require('./Force');
-    var Spring = require('./Spring');
-    var Quaternion = require('../../math/Quaternion');
+export default class RotationalSpring extends Spring {
 
     /**
      *  A force that rotates a physics body back to target Euler angles.
@@ -24,35 +26,29 @@ define(function(require, exports, module) {
      *  @extends Spring
      *  @param {Object} options options to set on drag
      */
-    function RotationalSpring(options) {
-        Spring.call(this, options);
+    constructor(options) {
+      super(...arguments);
     }
 
-    RotationalSpring.prototype = Object.create(Spring.prototype);
-    RotationalSpring.prototype.constructor = RotationalSpring;
+    static DEFAULT_OPTIONS = Spring.DEFAULT_OPTIONS;
+    static FORCE_FUNCTIONS = Spring.FORCE_FUNCTIONS;
 
-    RotationalSpring.DEFAULT_OPTIONS = Spring.DEFAULT_OPTIONS;
-    RotationalSpring.FORCE_FUNCTIONS = Spring.FORCE_FUNCTIONS;
-
-    /** @const */
-    var pi = Math.PI;
-
-    function _calcStiffness() {
+    _calcStiffness() {
         var options = this.options;
-        options.stiffness = Math.pow(2 * pi / options.period, 2);
+        options.stiffness = Math.pow(2 * Math.PI / options.period, 2);
     }
 
-    function _calcDamping() {
+    _calcDamping() {
         var options = this.options;
-        options.damping = 4 * pi * options.dampingRatio / options.period;
+        options.damping = 4 * Math.PI * options.dampingRatio / options.period;
     }
 
     function _init() {
-        _calcStiffness.call(this);
-        _calcDamping.call(this);
+        this._calcStiffness();
+        this._calcDamping();
     }
 
-    RotationalSpring.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         // TODO fix no-console error
         /* eslint no-console: 0 */
 
@@ -72,7 +68,7 @@ define(function(require, exports, module) {
 
         _init.call(this);
         Force.prototype.setOptions.call(this, options);
-    };
+    }
 
     /**
      * Adds a torque force to a physics body's torque accumulator.
@@ -80,22 +76,22 @@ define(function(require, exports, module) {
      * @method applyForce
      * @param targets {Array.Body} Array of bodies to apply torque to.
      */
-    RotationalSpring.prototype.applyForce = function applyForce(targets) {
-        var force = this.force;
-        var options = this.options;
-        var disp = this.disp;
+    applyForce(targets) {
+        let force = this.force;
+        let options = this.options;
+        let disp = this.disp;
 
-        var stiffness = options.stiffness;
-        var damping = options.damping;
-        var restLength = options.length;
-        var anchor = options.anchor;
-        var forceFunction = options.forceFunction;
-        var maxLength = options.maxLength;
+        let stiffness = options.stiffness;
+        let damping = options.damping;
+        let restLength = options.length;
+        let anchor = options.anchor;
+        let forceFunction = options.forceFunction;
+        let maxLength = options.maxLength;
 
-        var i;
-        var target;
-        var dist;
-        var m;
+        let i;
+        let target;
+        let dist;
+        let m;
 
         for (i = 0; i < targets.length; i++) {
             target = targets[i];
@@ -116,7 +112,7 @@ define(function(require, exports, module) {
 
             target.applyTorque(force);
         }
-    };
+    }
 
     /**
      * Calculates the potential energy of the rotational spring.
@@ -124,20 +120,18 @@ define(function(require, exports, module) {
      * @method getEnergy
      * @param [targets] target The physics body attached to the spring
      */
-    RotationalSpring.prototype.getEnergy = function getEnergy(targets) {
-        var options     = this.options;
-        var restLength  = options.length;
-        var anchor      = options.anchor;
-        var strength    = options.stiffness;
+    getEnergy(targets) {
+        let options     = this.options;
+        let restLength  = options.length;
+        let anchor      = options.anchor;
+        let strength    = options.stiffness;
 
-        var energy = 0.0;
-        for (var i = 0; i < targets.length; i++) {
-            var target = targets[i];
-            var dist = anchor.sub(target.orientation).norm() - restLength;
+        let energy = 0.0;
+        for (let i = 0; i < targets.length; i++) {
+            let target = targets[i];
+            let dist = anchor.sub(target.orientation).norm() - restLength;
             energy += 0.5 * strength * dist * dist;
         }
         return energy;
-    };
-
-    module.exports = RotationalSpring;
-});
+    }
+}

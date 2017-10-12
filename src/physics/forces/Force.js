@@ -1,16 +1,18 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Vector = require('../../math/Vector');
-    var EventHandler = require('../../core/EventHandler');
+import Vector from '../math/Vector.js';
+import EventHandler from '../core/EventHandler.js';
 
+
+export default class Force {
     /**
      * Force base class.
      *
@@ -18,7 +20,7 @@ define(function(require, exports, module) {
      * @uses EventHandler
      * @constructor
      */
-    function Force(force) {
+    constructor(force) {
         this.force = new Vector(force);
         this._eventOutput = new EventHandler();
         EventHandler.setOutputHandler(this, this._eventOutput);
@@ -30,9 +32,9 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param options {Objects}
      */
-    Force.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         this._eventOutput.emit('change', options);
-    };
+    }
 
     /**
      * Adds a force to a physics body's force accumulator.
@@ -40,12 +42,12 @@ define(function(require, exports, module) {
      * @method applyForce
      * @param targets {Array.Body} Array of bodies to apply a force to.
      */
-    Force.prototype.applyForce = function applyForce(targets) {
-        var length = targets.length;
+    applyForce(targets) {
+        let length = targets.length;
         while (length--) {
             targets[length].applyForce(this.force);
         }
-    };
+    }
 
     /**
      * Getter for a force's potential energy.
@@ -53,9 +55,7 @@ define(function(require, exports, module) {
      * @method getEnergy
      * @return energy {Number}
      */
-    Force.prototype.getEnergy = function getEnergy() {
+    getEnergy() {
         return 0.0;
-    };
-
-    module.exports = Force;
-});
+    }
+}

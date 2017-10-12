@@ -1,15 +1,17 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Constraint = require('./Constraint');
-    var Vector = require('../../math/Vector');
+import Constraint from './Constraint.js';
+import Vector from '../../math/Vector.js';
+
+export default class Curve extends Constraint {
 
     /**
      *  A constraint that keeps a physics body on a given implicit curve
@@ -27,24 +29,19 @@ define(function(require, exports, module) {
      *  @param {Number} [options.period] The spring-like reaction when the constraint is violated
      *  @param {Number} [options.number] The damping-like reaction when the constraint is violated
      */
-    function Curve(options) {
-        this.options = Object.create(Curve.DEFAULT_OPTIONS);
-        if (options) this.setOptions(options);
+    constructor(options) {
+      super();
+      this.options = Object.create(Curve.DEFAULT_OPTIONS);
+      if (options) this.setOptions(options);
 
-        //registers
-        this.J = new Vector();
-        this.impulse = new Vector();
-
-        Constraint.call(this);
+      //registers
+      this.J = new Vector();
+      this.impulse = new Vector();
     }
 
-    Curve.prototype = Object.create(Constraint.prototype);
-    Curve.prototype.constructor = Curve;
+    /** @const */ static epsilon = 1e-7;
 
-    /** @const */ var epsilon = 1e-7;
-    /** @const */ var pi = Math.PI;
-
-    Curve.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
         equation  : function(x,y,z) {
             return 0;
         },
@@ -53,7 +50,7 @@ define(function(require, exports, module) {
         },
         period : 0,
         dampingRatio : 0
-    };
+    }
 
     /**
      * Basic options setter
@@ -61,9 +58,9 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param options {Objects}
      */
-    Curve.prototype.setOptions = function setOptions(options) {
-        for (var key in options) this.options[key] = options[key];
-    };
+    setOptions(options) {
+        for (let key in options) this.options[key] = options[key];
+    }
 
     /**
      * Adds a curve impulse to a physics body.
@@ -73,61 +70,59 @@ define(function(require, exports, module) {
      * @param source {Body} Not applicable
      * @param dt {Number} Delta time
      */
-    Curve.prototype.applyConstraint = function applyConstraint(targets, source, dt) {
-        var options = this.options;
-        var impulse = this.impulse;
-        var J = this.J;
+    applyConstraint(targets, source, dt) {
+        let options = this.options;
+        let impulse = this.impulse;
+        let J = this.J;
 
-        var f = options.equation;
-        var g = options.plane;
-        var dampingRatio = options.dampingRatio;
-        var period = options.period;
+        let f = options.equation;
+        let g = options.plane;
+        let dampingRatio = options.dampingRatio;
+        let period = options.period;
 
-        for (var i = 0; i < targets.length; i++) {
-            var body = targets[i];
+        for (let i = 0; i < targets.length; i++) {
+            let body = targets[i];
 
-            var v = body.velocity;
-            var p = body.position;
-            var m = body.mass;
+            let v = body.velocity;
+            let p = body.position;
+            let m = body.mass;
 
-            var gamma;
-            var beta;
+            let gamma;
+            let beta;
 
             if (period === 0) {
                 gamma = 0;
                 beta = 1;
             }
             else {
-                var c = 4 * m * pi * dampingRatio / period;
-                var k = 4 * m * pi * pi / (period * period);
+                let c = 4 * m * Math.PI * dampingRatio / period;
+                let k = 4 * m * Math.PI * Math.PI / (period * period);
 
                 gamma = 1 / (c + dt*k);
                 beta  = dt*k / (c + dt*k);
             }
 
-            var x = p.x;
-            var y = p.y;
-            var z = p.z;
+            let x = p.x;
+            let y = p.y;
+            let z = p.z;
 
-            var f0  = f(x, y, z);
-            var dfx = (f(x + epsilon, y, z) - f0) / epsilon;
-            var dfy = (f(x, y + epsilon, z) - f0) / epsilon;
-            var dfz = (f(x, y, z + epsilon) - f0) / epsilon;
+            let f0  = f(x, y, z);
+            let dfx = (f(x + epsilon, y, z) - f0) / epsilon;
+            let dfy = (f(x, y + epsilon, z) - f0) / epsilon;
+            let dfz = (f(x, y, z + epsilon) - f0) / epsilon;
 
-            var g0  = g(x, y, z);
-            var dgx = (g(x + epsilon, y, z) - g0) / epsilon;
-            var dgy = (g(x, y + epsilon, z) - g0) / epsilon;
-            var dgz = (g(x, y, z + epsilon) - g0) / epsilon;
+            let g0  = g(x, y, z);
+            let dgx = (g(x + epsilon, y, z) - g0) / epsilon;
+            let dgy = (g(x, y + epsilon, z) - g0) / epsilon;
+            let dgz = (g(x, y, z + epsilon) - g0) / epsilon;
 
             J.setXYZ(dfx + dgx, dfy + dgy, dfz + dgz);
 
-            var antiDrift = beta/dt * (f0 + g0);
-            var lambda = -(J.dot(v) + antiDrift) / (gamma + dt * J.normSquared() / m);
+            let antiDrift = beta/dt * (f0 + g0);
+            let lambda = -(J.dot(v) + antiDrift) / (gamma + dt * J.normSquared() / m);
 
             impulse.set(J.mult(dt*lambda));
             body.applyImpulse(impulse);
         }
-    };
-
-    module.exports = Curve;
-});
+    }
+}

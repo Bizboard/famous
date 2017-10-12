@@ -1,41 +1,47 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: felix@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var PhysicsEngine = require('../physics/PhysicsEngine');
-    var Particle = require('../physics/bodies/Particle');
-    var Drag = require('../physics/forces/Drag');
-    var Spring = require('../physics/forces/Spring');
 
-    var EventHandler = require('../core/EventHandler');
-    var OptionsManager = require('../core/OptionsManager');
-    var ViewSequence = require('../core/ViewSequence');
-    var Scroller = require('../views/Scroller');
-    var Utility = require('../utilities/Utility');
+import PhysicsEngine from '../physics/PhysicsEngine.js';
+import Particle from '../physics/Particle.js';
+import Drag from '../physics/Drag.js';
+import Spring from '../physics/Spring.js';
 
-    var GenericSync = require('../inputs/GenericSync');
-    var ScrollSync = require('../inputs/ScrollSync');
-    var TouchSync = require('../inputs/TouchSync');
-    GenericSync.register({scroll : ScrollSync, touch : TouchSync});
+import EventHandler from '../core/EventHandler.js';
+import OptionsManager from '../core/OptionsManager.js';
+import ViewSequence from '../core/ViewSequence.js';
+import Scroller from '../views/Scroller.js';
+import Utility from '../utilities/Utility.js';
+
+import GenericSync from '../inputs/GenericSync.js';
+import MouseSync from '../inputs/MouseSync.js';
+import TouchSync from '../inputs/TouchSync.js';
+
+GenericSync.register({scroll : ScrollSync, touch : TouchSync});
+
+
+export default class ScrollView {
+
 
     /** @const */
-    var TOLERANCE = 0.5;
+    static TOLERANCE = 0.5;
 
     /** @enum */
-    var SpringStates = {
+    static SpringStates = {
         NONE: 0,
         EDGE: 1,
         PAGE: 2
     };
 
     /** @enum */
-    var EdgeStates = {
+    static EdgeStates = {
         TOP:   -1,
         NONE:   0,
         BOTTOM: 1
@@ -74,7 +80,7 @@ define(function(require, exports, module) {
      * @param {Number} [pageSwitchSpeed=1] The threshold for momentum-based velocity pagination.
      * @param {Number} [speedLimit=10] The highest scrolling speed you can reach.
      */
-    function Scrollview(options) {
+    constructor(options) {
         // patch options with defaults
         this.options = Object.create(Scrollview.DEFAULT_OPTIONS);
         this._optionsManager = new OptionsManager(this.options);
@@ -127,7 +133,7 @@ define(function(require, exports, module) {
         this._cachedIndex = 0;
 
         // subcomponent logic
-        this._scroller.positionFrom(this.getPosition.bind(this));
+        this._scroller.positionFrom(this.getPosition);
 
         // eventing
         this._eventInput = new EventHandler();
@@ -139,7 +145,7 @@ define(function(require, exports, module) {
         EventHandler.setInputHandler(this, this._eventInput);
         EventHandler.setOutputHandler(this, this._eventOutput);
 
-        _bindEvents.call(this);
+        this._bindEvents();
 
         // override default options with passed-in custom options
         if (options) this.setOptions(options);
@@ -162,45 +168,45 @@ define(function(require, exports, module) {
         speedLimit: 5,
         groupScroll: false,
         syncScale: 1
-    };
+    }
 
-    function _handleStart(event) {
+    _handleStart(event) {
         this._touchCount = event.count;
         if (event.count === undefined) this._touchCount = 1;
 
-        _detachAgents.call(this);
+        this._detachAgents();
 
         this.setVelocity(0);
         this._touchVelocity = 0;
         this._earlyEnd = false;
     }
 
-    function _handleMove(event) {
-        var velocity = -event.velocity;
-        var delta = -event.delta;
+    _handleMove(event) {
+        let velocity = -event.velocity;
+        let delta = -event.delta;
 
         if (this._onEdge !== EdgeStates.NONE && event.slip) {
             if ((velocity < 0 && this._onEdge === EdgeStates.TOP) || (velocity > 0 && this._onEdge === EdgeStates.BOTTOM)) {
                 if (!this._earlyEnd) {
-                    _handleEnd.call(this, event);
+                    this._handleEnd(event);
                     this._earlyEnd = true;
                 }
             }
             else if (this._earlyEnd && (Math.abs(velocity) > Math.abs(this.getVelocity()))) {
-                _handleStart.call(this, event);
+                this._handleStart(event);
             }
         }
         if (this._earlyEnd) return;
         this._touchVelocity = velocity;
 
         if (event.slip) {
-            var speedLimit = this.options.speedLimit;
+            let speedLimit = this.options.speedLimit;
             if (velocity < -speedLimit) velocity = -speedLimit;
             else if (velocity > speedLimit) velocity = speedLimit;
 
             this.setVelocity(velocity);
 
-            var deltaLimit = speedLimit * 16;
+            let deltaLimit = speedLimit * 16;
             if (delta > deltaLimit) delta = deltaLimit;
             else if (delta < -deltaLimit) delta = -deltaLimit;
         }
@@ -208,17 +214,17 @@ define(function(require, exports, module) {
         this.setPosition(this.getPosition() + delta);
         this._displacement += delta;
 
-        if (this._springState === SpringStates.NONE) _normalizeState.call(this);
+        if (this._springState === SpringStates.NONE) this._normalizeState();
     }
 
-    function _handleEnd(event) {
+    _handleEnd(event) {
         this._touchCount = event.count || 0;
         if (!this._touchCount) {
-            _detachAgents.call(this);
-            if (this._onEdge !== EdgeStates.NONE) _setSpring.call(this, this._edgeSpringPosition, SpringStates.EDGE);
-            _attachAgents.call(this);
-            var velocity = -event.velocity;
-            var speedLimit = this.options.speedLimit;
+            this._detachAgents();
+            if (this._onEdge !== EdgeStates.NONE) this._setSpring(this._edgeSpringPosition, SpringStates.EDGE);
+            this._attachAgents();
+            let velocity = -event.velocity;
+            let speedLimit = this.options.speedLimit;
             if (event.slip) speedLimit *= this.options.edgeGrip;
             if (velocity < -speedLimit) velocity = -speedLimit;
             else if (velocity > speedLimit) velocity = speedLimit;
@@ -228,87 +234,87 @@ define(function(require, exports, module) {
         }
     }
 
-    function _bindEvents() {
+    _bindEvents() {
         this._eventInput.bindThis(this);
-        this._eventInput.on('start', _handleStart);
-        this._eventInput.on('update', _handleMove);
-        this._eventInput.on('end', _handleEnd);
+        this._eventInput.on('start', this._handleStart);
+        this._eventInput.on('update', this._handleMove);
+        this._eventInput.on('end', this._handleEnd);
 
-        this._eventInput.on('resize', function() {
+        this._eventInput.on('resize', () => {
             this._node._.calculateSize();
-        }.bind(this));
+        });
 
-        this._scroller.on('onEdge', function(data) {
+        this._scroller.on('onEdge', (data) => {
             this._edgeSpringPosition = data.position;
-            _handleEdge.call(this, this._scroller.onEdge());
+            this._handleEdge(this._scroller.onEdge());
             this._eventOutput.emit('onEdge');
-        }.bind(this));
+        });
 
-        this._scroller.on('offEdge', function() {
+        this._scroller.on('offEdge', () => {
             this.sync.setOptions({scale: this.options.syncScale});
             this._onEdge = this._scroller.onEdge();
             this._eventOutput.emit('offEdge');
-        }.bind(this));
+        });
 
-        this._particle.on('update', function(particle) {
-            if (this._springState === SpringStates.NONE) _normalizeState.call(this);
+        this._particle.on('update', (particle) => {
+            if (this._springState === SpringStates.NONE) this._normalizeState();
             this._displacement = particle.position.x - this._totalShift;
-        }.bind(this));
+        });
 
-        this._particle.on('end', function() {
+        this._particle.on('end', () => {
             if (!this.options.paginated || (this.options.paginated && this._springState !== SpringStates.NONE))
                 this._eventOutput.emit('settle');
-        }.bind(this));
+        });
     }
 
-    function _attachAgents() {
+    _attachAgents() {
         if (this._springState) this._physicsEngine.attach([this.spring], this._particle);
         else this._physicsEngine.attach([this.drag, this.friction], this._particle);
     }
 
-    function _detachAgents() {
+    _detachAgents() {
         this._springState = SpringStates.NONE;
         this._physicsEngine.detachAll();
     }
 
-    function _nodeSizeForDirection(node) {
-        var direction = this.options.direction;
-        var nodeSize = node.getSize();
+    _nodeSizeForDirection(node) {
+        let direction = this.options.direction;
+        let nodeSize = node.getSize();
         return (!nodeSize) ? this._scroller.getSize()[direction] : nodeSize[direction];
     }
 
-    function _handleEdge(edge) {
+    _handleEdge(edge) {
         this.sync.setOptions({scale: this.options.edgeGrip});
         this._onEdge = edge;
 
         if (!this._touchCount && this._springState !== SpringStates.EDGE) {
-            _setSpring.call(this, this._edgeSpringPosition, SpringStates.EDGE);
+            this._setSpring(this._edgeSpringPosition, SpringStates.EDGE);
         }
 
         if (this._springState && Math.abs(this.getVelocity()) < 0.001) {
             // reset agents, detaching the spring
-            _detachAgents.call(this);
-            _attachAgents.call(this);
+            this._detachAgents();
+            this._attachAgents();
         }
     }
 
-    function _handlePagination() {
+    _handlePagination() {
         if (this._touchCount) return;
         if (this._springState === SpringStates.EDGE) return;
 
-        var velocity = this.getVelocity();
+        let velocity = this.getVelocity();
         if (Math.abs(velocity) >= this.options.pageStopSpeed) return;
 
-        var position = this.getPosition();
-        var velocitySwitch = Math.abs(velocity) > this.options.pageSwitchSpeed;
+        let position = this.getPosition();
+        let velocitySwitch = Math.abs(velocity) > this.options.pageSwitchSpeed;
 
         // parameters to determine when to switch
-        var nodeSize = _nodeSizeForDirection.call(this, this._node);
-        var positionNext = position > 0.5 * nodeSize;
-        var positionPrev = position < 0.5 * nodeSize;
+        let nodeSize = this._nodeSizeForDirection(this._node);
+        let positionNext = position > 0.5 * nodeSize;
+        let positionPrev = position < 0.5 * nodeSize;
 
-        var velocityNext = velocity > 0;
-        var velocityPrev = velocity < 0;
+        let velocityNext = velocity > 0;
+        let velocityPrev = velocity < 0;
 
         this._needsPaginationCheck = false;
 
@@ -318,11 +324,11 @@ define(function(require, exports, module) {
         else if (velocitySwitch && velocityPrev) {
             this.goToPreviousPage();
         }
-        else _setSpring.call(this, 0, SpringStates.PAGE);
+        else this._setSpring(0, SpringStates.PAGE);
     }
 
-    function _setSpring(position, springState) {
-        var springOptions;
+    _setSpring(position, springState) {
+        let springOptions;
         if (springState === SpringStates.EDGE) {
             this._edgeSpringPosition = position;
             springOptions = {
@@ -342,42 +348,42 @@ define(function(require, exports, module) {
 
         this.spring.setOptions(springOptions);
         if (springState && !this._springState) {
-            _detachAgents.call(this);
+            this._detachAgents();
             this._springState = springState;
-            _attachAgents.call(this);
+            this._attachAgents();
         }
         this._springState = springState;
     }
 
-    function _normalizeState() {
-        var offset = 0;
+    _normalizeState() {
+        let offset = 0;
 
-        var position = this.getPosition();
+        let position = this.getPosition();
         position += (position < 0 ? -0.5 : 0.5) >> 0;
 
-        var nodeSize = _nodeSizeForDirection.call(this, this._node);
-        var nextNode = this._node.getNext();
+        let nodeSize = this._nodeSizeForDirection(this._node);
+        let nextNode = this._node.getNext();
 
         while (offset + position >= nodeSize && nextNode) {
             offset -= nodeSize;
             this._scroller.sequenceFrom(nextNode);
             this._node = nextNode;
             nextNode = this._node.getNext();
-            nodeSize = _nodeSizeForDirection.call(this, this._node);
+            nodeSize = this._nodeSizeForDirection(this._node);
         }
 
-        var previousNode = this._node.getPrevious();
-        var previousNodeSize;
+        let previousNode = this._node.getPrevious();
+        let previousNodeSize;
 
         while (offset + position <= 0 && previousNode) {
-            previousNodeSize = _nodeSizeForDirection.call(this, previousNode);
+            previousNodeSize = this._nodeSizeForDirection(previousNode);
             this._scroller.sequenceFrom(previousNode);
             this._node = previousNode;
             offset += previousNodeSize;
             previousNode = this._node.getPrevious();
         }
 
-        if (offset) _shiftOrigin.call(this, offset);
+        if (offset) this._shiftOrigin(offset);
 
         if (this._node) {
             if (this._node.index !== this._cachedIndex) {
@@ -394,7 +400,7 @@ define(function(require, exports, module) {
         }
     }
 
-    function _shiftOrigin(amount) {
+    _shiftOrigin(amount) {
         this._edgeSpringPosition += amount;
         this._pageSpringPosition += amount;
         this.setPosition(this.getPosition() + amount);
@@ -414,9 +420,9 @@ define(function(require, exports, module) {
      * @method getCurrentIndex
      * @return {Number} The current index of the ViewSequence
      */
-    Scrollview.prototype.getCurrentIndex = function getCurrentIndex() {
+    getCurrentIndex() {
         return this._node.index;
-    };
+    }
 
     /**
      * goToPreviousPage paginates your Scrollview instance backwards by one item.
@@ -424,26 +430,26 @@ define(function(require, exports, module) {
      * @method goToPreviousPage
      * @return {ViewSequence} The previous node.
      */
-    Scrollview.prototype.goToPreviousPage = function goToPreviousPage() {
+    goToPreviousPage() {
         if (!this._node || this._onEdge === EdgeStates.TOP) return null;
 
         // if moving back to the current node
         if (this.getPosition() > 1 && this._springState === SpringStates.NONE) {
-            _setSpring.call(this, 0, SpringStates.PAGE);
+            this._setSpring(0, SpringStates.PAGE);
             return this._node;
         }
 
         // if moving to the previous node
-        var previousNode = this._node.getPrevious();
+        let previousNode = this._node.getPrevious();
         if (previousNode) {
-            var previousNodeSize = _nodeSizeForDirection.call(this, previousNode);
+            let previousNodeSize = this._nodeSizeForDirection(previousNode);
             this._scroller.sequenceFrom(previousNode);
             this._node = previousNode;
-            _shiftOrigin.call(this, previousNodeSize);
-            _setSpring.call(this, 0, SpringStates.PAGE);
+            this._shiftOrigin(previousNodeSize);
+            this._setSpring(0, SpringStates.PAGE);
         }
         return previousNode;
-    };
+    }
 
     /**
      * goToNextPage paginates your Scrollview instance forwards by one item.
@@ -451,27 +457,27 @@ define(function(require, exports, module) {
      * @method goToNextPage
      * @return {ViewSequence} The next node.
      */
-    Scrollview.prototype.goToNextPage = function goToNextPage() {
+    goToNextPage() {
         if (!this._node || this._onEdge === EdgeStates.BOTTOM) return null;
-        var nextNode = this._node.getNext();
+        let nextNode = this._node.getNext();
         if (nextNode) {
-            var currentNodeSize = _nodeSizeForDirection.call(this, this._node);
+            let currentNodeSize = this._nodeSizeForDirection(this._node);
             this._scroller.sequenceFrom(nextNode);
             this._node = nextNode;
-            _shiftOrigin.call(this, -currentNodeSize);
-            _setSpring.call(this, 0, SpringStates.PAGE);
+            this._shiftOrigin(-currentNodeSize);
+            this._setSpring(0, SpringStates.PAGE);
         }
         return nextNode;
-    };
+    }
 
     /**
      * Paginates the Scrollview to an absolute page index.
      *
      * @method goToPage
      */
-    Scrollview.prototype.goToPage = function goToPage(index) {
-        var currentIndex = this.getCurrentIndex();
-        var i;
+    goToPage(index) {
+        let currentIndex = this.getCurrentIndex();
+        let i;
 
         if (currentIndex > index) {
             for (i = 0; i < currentIndex - index; i++)
@@ -482,11 +488,11 @@ define(function(require, exports, module) {
             for (i = 0; i < index - currentIndex; i++)
                 this.goToNextPage();
         }
-    };
+    }
 
-    Scrollview.prototype.outputFrom = function outputFrom() {
+    outputFrom() {
         return this._scroller.outputFrom.apply(this._scroller, arguments);
-    };
+    }
 
     /**
      * Returns the position associated with the Scrollview instance's current node
@@ -499,9 +505,9 @@ define(function(require, exports, module) {
      * @return {number} The position of either the specified node, or the Scrollview's current Node,
      * in pixels translated.
      */
-    Scrollview.prototype.getPosition = function getPosition() {
+    getPosition() {
         return this._particle.getPosition1D();
-    };
+    }
 
     /**
      * Returns the absolute position associated with the Scrollview instance
@@ -510,9 +516,9 @@ define(function(require, exports, module) {
      * @return {number} The position of the Scrollview's current Node,
      * in pixels translated.
      */
-    Scrollview.prototype.getAbsolutePosition = function getAbsolutePosition() {
+    getAbsolutePosition() {
         return this._scroller.getCumulativeSize(this.getCurrentIndex())[this.options.direction] + this.getPosition();
-    };
+    }
 
     /**
      * Returns the offset associated with the Scrollview instance's current node
@@ -533,9 +539,9 @@ define(function(require, exports, module) {
      * @method setPosition
      * @param {number} x The amount of pixels you want your scrollview to progress by.
      */
-    Scrollview.prototype.setPosition = function setPosition(x) {
+    setPosition(x) {
         this._particle.setPosition1D(x);
-    };
+    }
 
     /**
      * Sets the offset of the physics particle that controls Scrollview instance's "position"
@@ -552,9 +558,9 @@ define(function(require, exports, module) {
      * @return {Number} The velocity.
      */
 
-    Scrollview.prototype.getVelocity = function getVelocity() {
+    getVelocity() {
         return this._touchCount ? this._touchVelocity : this._particle.getVelocity1D();
-    };
+    }
 
     /**
      * Sets the Scrollview instance's velocity. Until affected by input or another call of setVelocity
@@ -563,9 +569,9 @@ define(function(require, exports, module) {
      * @method setVelocity
      * @param {number} v The magnitude of the velocity.
      */
-    Scrollview.prototype.setVelocity = function setVelocity(v) {
+    setVelocity(v) {
         this._particle.setVelocity1D(v);
-    };
+    }
 
     /**
      * Patches the Scrollview instance's options with the passed-in ones.
@@ -573,7 +579,7 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param {Options} options An object of configurable options for the Scrollview instance.
      */
-    Scrollview.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         // preprocess custom options
         if (options.direction !== undefined) {
             if (options.direction === 'x') options.direction = Utility.Direction.X;
@@ -614,7 +620,7 @@ define(function(require, exports, module) {
                 preventDefault: this.options.preventDefault
             });
         }
-    };
+    }
 
     /**
      * Sets the collection of renderables under the Scrollview instance's control, by
@@ -625,11 +631,11 @@ define(function(require, exports, module) {
      * @method sequenceFrom
      * @param {Array|ViewSequence} node Either an array of renderables or a Famous viewSequence.
      */
-    Scrollview.prototype.sequenceFrom = function sequenceFrom(node) {
+    sequenceFrom(node) {
         if (node instanceof Array) node = new ViewSequence({array: node, trackSize: true});
         this._node = node;
         return this._scroller.sequenceFrom(node);
-    };
+    }
 
     /**
      * Returns the width and the height of the Scrollview instance.
@@ -637,9 +643,9 @@ define(function(require, exports, module) {
      * @method getSize
      * @return {Array} A two value array of the Scrollview instance's current width and height (in that order).
      */
-    Scrollview.prototype.getSize = function getSize() {
+    getSize() {
         return this._scroller.getSize.apply(this._scroller, arguments);
-    };
+    }
 
     /**
      * Generate a render spec from the contents of this component.
@@ -648,11 +654,9 @@ define(function(require, exports, module) {
      * @method render
      * @return {number} Render spec for this component
      */
-    Scrollview.prototype.render = function render() {
-        if (this.options.paginated && this._needsPaginationCheck) _handlePagination.call(this);
+    render() {
+        if (this.options.paginated && this._needsPaginationCheck) this._handlePagination();
 
         return this._scroller.render();
-    };
-
-    module.exports = Scrollview;
-});
+    }
+}

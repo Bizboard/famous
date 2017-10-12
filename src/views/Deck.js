@@ -1,18 +1,21 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: felix@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Transform = require('../core/Transform');
-    var OptionsManager = require('../core/OptionsManager');
-    var Transitionable = require('../transitions/Transitionable');
-    var Utility = require('../utilities/Utility');
-    var SequentialLayout = require('./SequentialLayout');
+import Transform from '../core/Transform.js';
+import OptionsManager from '../core/OptionsManager.js';
+import Transitionable from '../transitions/Transitionable.js';
+import Utility from '../utilities/Utility.js';
+import SequentialLayout from './SequentialLayout.js';
+
+
+export default class Deck extends SequentialLayout {
 
     /**
      * A Sequential Layout that can be opened and closed with animations.
@@ -33,19 +36,20 @@ define(function(require, exports, module) {
      * @param {Object} [options.transition] A transition object for changing between states.
      * @param {Number} [options.direction] axis of expansion (Utility.Direction.X or .Y)
      */
-    function Deck(options) {
-        SequentialLayout.apply(this, arguments);
+    constructor(options) {
+        super(...arguments);
+
         this.state = new Transitionable(0);
         this._isOpen = false;
 
-        this.setOutputFunction(function(input, offset, index) {
-            var state = _getState.call(this);
-            var positionMatrix = (this.options.direction === Utility.Direction.X) ?
+        this.setOutputFunction((input, offset, index) => {
+            let state = _getState.call(this);
+            let positionMatrix = (this.options.direction === Utility.Direction.X) ?
                 Transform.translate(state * offset, 0, 0.001 * (state - 1) * offset) :
                 Transform.translate(0, state * offset, 0.001 * (state - 1) * offset);
-            var output = input.render();
+            let output = input.render();
             if (this.options.stackRotation) {
-                var amount = this.options.stackRotation * index * (1 - state);
+                let amount = this.options.stackRotation * index * (1 - state);
                 output = {
                     transform: Transform.rotateZ(amount),
                     origin: [0.5, 0.5],
@@ -59,16 +63,15 @@ define(function(require, exports, module) {
             };
         });
     }
-    Deck.prototype = Object.create(SequentialLayout.prototype);
-    Deck.prototype.constructor = Deck;
 
-    Deck.DEFAULT_OPTIONS = OptionsManager.patch(SequentialLayout.DEFAULT_OPTIONS, {
+
+    static DEFAULT_OPTIONS = OptionsManager.patch(SequentialLayout.DEFAULT_OPTIONS, {
         transition: {
             curve: 'easeOutBounce',
             duration: 500
         },
         stackRotation: 0
-    });
+    })
 
     /**
      * Returns the width and the height of the Deck instance.
@@ -77,21 +80,21 @@ define(function(require, exports, module) {
      * @return {Array} A two value array of Deck's current width and height (in that order).
      *   Scales as Deck opens and closes.
      */
-    Deck.prototype.getSize = function getSize() {
-        var originalSize = SequentialLayout.prototype.getSize.apply(this, arguments);
-        var firstSize = this._items ? this._items.get().getSize() : [0, 0];
+    getSize() {
+        let originalSize = super.getSize(...arguments);
+        let firstSize = this._items ? this._items.get().getSize() : [0, 0];
         if (!firstSize) firstSize = [0, 0];
-        var state = _getState.call(this);
-        var invState = 1 - state;
+        let state = this._getState();
+        let invState = 1 - state;
         return [firstSize[0] * invState + originalSize[0] * state, firstSize[1] * invState + originalSize[1] * state];
     };
 
-    function _getState(returnFinal) {
+    _getState(returnFinal) {
         if (returnFinal) return this._isOpen ? 1 : 0;
         else return this.state.get();
     }
 
-    function _setState(pos, transition, callback) {
+    _setState(pos, transition, callback) {
         this.state.halt();
         this.state.set(pos, transition, callback);
     }
@@ -102,9 +105,9 @@ define(function(require, exports, module) {
      * @method isOpen
      * @return {Boolean} Returns true if the instance is open or false if it's closed.
      */
-    Deck.prototype.isOpen = function isOpen() {
+    isOpen() {
         return this._isOpen;
-    };
+    }
 
     /**
      * Sets the Deck instance to an open state.
@@ -112,10 +115,10 @@ define(function(require, exports, module) {
      * @method open
      * @param {function} [callback] Executes after transitioning to a fully open state.
      */
-    Deck.prototype.open = function open(callback) {
+    open(callback) {
         this._isOpen = true;
-       _setState.call(this, 1, this.options.transition, callback);
-    };
+       this._setState(1, this.options.transition, callback);
+    }
 
     /**
      * Sets the Deck instance to an open state.
@@ -123,10 +126,10 @@ define(function(require, exports, module) {
      * @method close
      * @param {function} [callback] Executes after transitioning to a fully closed state.
      */
-    Deck.prototype.close = function close(callback) {
+    close(callback) {
         this._isOpen = false;
-        _setState.call(this, 0, this.options.transition, callback);
-    };
+        this._setState(0, this.options.transition, callback);
+    }
 
     /**
      * Sets the Deck instance from its current state to the opposite state.
@@ -134,10 +137,8 @@ define(function(require, exports, module) {
      * @method close
      * @param {function} [callback] Executes after transitioning to the toggled state.
      */
-    Deck.prototype.toggle = function toggle(callback) {
+    toggle(callback) {
         if (this._isOpen) this.close(callback);
         else this.open(callback);
-    };
-
-    module.exports = Deck;
-});
+    }
+}

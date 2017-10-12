@@ -1,13 +1,15 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
+
+export default class TweenTransition {
 
     /**
      *
@@ -32,7 +34,7 @@ define(function(require, exports, module) {
      * @param {Object} options TODO
      *    beginning state
      */
-    function TweenTransition(options) {
+    constructor(options) {
         this.options = Object.create(TweenTransition.DEFAULT_OPTIONS);
         if (options) this.setOptions(options);
 
@@ -56,7 +58,7 @@ define(function(require, exports, module) {
      * @property {object} Curve
      * @final
      */
-    TweenTransition.Curves = {
+    static Curves = {
         linear: function(t) {
             return t;
         },
@@ -78,14 +80,14 @@ define(function(require, exports, module) {
         }
     };
 
-    TweenTransition.SUPPORTS_MULTIPLE = true;
-    TweenTransition.DEFAULT_OPTIONS = {
+    static SUPPORTS_MULTIPLE = true;
+    static DEFAULT_OPTIONS = {
         curve: TweenTransition.Curves.linear,
         duration: 500,
         speed: 0 /* considered only if positive */
     };
 
-    var registeredCurves = {};
+    static registeredCurves = {};
 
     /**
      * Add "unit" curve to internal dictionary of registered curves.
@@ -99,7 +101,7 @@ define(function(require, exports, module) {
      *    to range inside [0,1]
      * @return {boolean} false if key is taken, else true
      */
-    TweenTransition.registerCurve = function registerCurve(curveName, curve) {
+    static registerCurve(curveName, curve) {
         if (!registeredCurves[curveName]) {
             registeredCurves[curveName] = curve;
             return true;
@@ -107,7 +109,7 @@ define(function(require, exports, module) {
         else {
             return false;
         }
-    };
+    }
 
     /**
      * Remove object with key "curveName" from internal dictionary of registered
@@ -120,7 +122,7 @@ define(function(require, exports, module) {
      * @param {string} curveName dictionary key
      * @return {boolean} false if key has no dictionary value
      */
-    TweenTransition.unregisterCurve = function unregisterCurve(curveName) {
+    static unregisterCurve(curveName) {
         if (registeredCurves[curveName]) {
             delete registeredCurves[curveName];
             return true;
@@ -128,7 +130,7 @@ define(function(require, exports, module) {
         else {
             return false;
         }
-    };
+    }
 
     /**
      * Retrieve function with key "curveName" from internal dictionary of
@@ -144,11 +146,11 @@ define(function(require, exports, module) {
      * @return {unitCurve} curve function of one numeric variable mapping [0,1]
      *    to range inside [0,1]
      */
-    TweenTransition.getCurve = function getCurve(curveName) {
+    static getCurve(curveName) {
         var curve = registeredCurves[curveName];
         if (curve !== undefined) return curve;
         else throw new Error('curve not registered');
-    };
+    }
 
     /**
      * Retrieve all available curves.
@@ -160,16 +162,16 @@ define(function(require, exports, module) {
      * @return {object} curve functions of one numeric variable mapping [0,1]
      *    to range inside [0,1]
      */
-    TweenTransition.getCurves = function getCurves() {
+    static getCurves() {
         return registeredCurves;
-    };
+    }
 
      // Interpolate: If a linear function f(0) = a, f(1) = b, then return f(t)
-    function _interpolate(a, b, t) {
+    static _interpolate(a, b, t) {
         return ((1 - t) * a) + (t * b);
     }
 
-    function _clone(obj) {
+    static _clone(obj) {
         if (obj instanceof Object) {
             if (obj instanceof Array) return obj.slice(0);
             else return Object.create(obj);
@@ -180,7 +182,7 @@ define(function(require, exports, module) {
     // Fill in missing properties in "transition" with those in defaultTransition, and
     //   convert internal named curve to function object, returning as new
     //   object.
-    function _normalize(transition, defaultTransition) {
+    static _normalize(transition, defaultTransition) {
         var result = {curve: defaultTransition.curve};
         if (defaultTransition.duration) result.duration = defaultTransition.duration;
         if (defaultTransition.speed) result.speed = defaultTransition.speed;
@@ -204,11 +206,11 @@ define(function(require, exports, module) {
      * @param {Number} [options.duration] duration in ms
      * @param {Number} [options.speed] speed in pixels per ms
      */
-    TweenTransition.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         if (options.curve !== undefined) this.options.curve = options.curve;
         if (options.duration !== undefined) this.options.duration = options.duration;
         if (options.speed !== undefined) this.options.speed = options.speed;
-    };
+    }
 
     /**
      * Add transition to end state to the queue of pending transitions. Special
@@ -226,7 +228,7 @@ define(function(require, exports, module) {
      * @param {function()=} callback Zero-argument function to call on observed
      *    completion (t=1)
      */
-    TweenTransition.prototype.set = function set(endValue, transition, callback) {
+    set(endValue, transition, callback) {
         if (!transition) {
             this.reset(endValue);
             if (callback) callback();
@@ -254,7 +256,7 @@ define(function(require, exports, module) {
         this._curve = transition.curve;
         this._active = true;
         this._callback = callback;
-    };
+    }
 
     /**
      * Cancel all transitions and reset to a stable state
@@ -266,7 +268,7 @@ define(function(require, exports, module) {
      * @param {number} startVelocity
      *    starting velocity
      */
-    TweenTransition.prototype.reset = function reset(startValue, startVelocity) {
+    reset(startValue, startVelocity) {
         if (this._callback) {
             var callback = this._callback;
             this._callback = undefined;
@@ -281,7 +283,7 @@ define(function(require, exports, module) {
         this._startVelocity = this.velocity;
         this._endValue = this.state;
         this._active = false;
-    };
+    }
 
     /**
      * Get current velocity
@@ -290,9 +292,9 @@ define(function(require, exports, module) {
      *
      * @returns {Number} velocity
      */
-    TweenTransition.prototype.getVelocity = function getVelocity() {
+    getVelocity() {
         return this.velocity;
-    };
+    }
 
     /**
      * Get interpolated state of current action at provided time. If the last
@@ -306,10 +308,10 @@ define(function(require, exports, module) {
      * @return {number|Object.<number|string, number>} beginning state
      *    _interpolated to this point in time.
      */
-    TweenTransition.prototype.get = function get(timestamp) {
+    get(timestamp) {
         this.update(timestamp);
         return this.state;
-    };
+    }
 
     function _calculateVelocity(current, start, curve, duration, t) {
         var velocity;
@@ -354,7 +356,7 @@ define(function(require, exports, module) {
      * @param {number=} timestamp Evaluate the curve at a normalized version of this
      *    time. If omitted, use current time. (Unix epoch time)
      */
-    TweenTransition.prototype.update = function update(timestamp) {
+    update(timestamp) {
         if (!this._active) {
             if (this._callback) {
                 var callback = this._callback;
@@ -383,7 +385,7 @@ define(function(require, exports, module) {
             this.state = _calculateState(this._startValue, this._endValue, this._curve(t));
             this.velocity = _calculateVelocity(this.state, this._startValue, this._curve, this._duration, t);
         }
-    };
+    }
 
     /**
      * Is there at least one action pending completion?
@@ -393,9 +395,9 @@ define(function(require, exports, module) {
      *
      * @return {boolean}
      */
-    TweenTransition.prototype.isActive = function isActive() {
+    isActive() {
         return this._active;
-    };
+    }
 
     /**
      * Halt transition at current state and erase all pending actions.
@@ -403,24 +405,22 @@ define(function(require, exports, module) {
      * @method halt
      *
      */
-    TweenTransition.prototype.halt = function halt() {
+    halt() {
         this.reset(this.get());
-    };
+    }
 
-    // Register all the default curves
-    TweenTransition.registerCurve('linear', TweenTransition.Curves.linear);
-    TweenTransition.registerCurve('easeIn', TweenTransition.Curves.easeIn);
-    TweenTransition.registerCurve('easeOut', TweenTransition.Curves.easeOut);
-    TweenTransition.registerCurve('easeInOut', TweenTransition.Curves.easeInOut);
-    TweenTransition.registerCurve('easeOutBounce', TweenTransition.Curves.easeOutBounce);
-    TweenTransition.registerCurve('spring', TweenTransition.Curves.spring);
-
-    TweenTransition.customCurve = function customCurve(v1, v2) {
+    static customCurve(v1, v2) {
         v1 = v1 || 0; v2 = v2 || 0;
         return function(t) {
             return v1*t + (-2*v1 - v2 + 3)*t*t + (v1 + v2 - 2)*t*t*t;
         };
     };
+}
 
-    module.exports = TweenTransition;
-});
+// Register all the default curves
+TweenTransition.registerCurve('linear', TweenTransition.Curves.linear);
+TweenTransition.registerCurve('easeIn', TweenTransition.Curves.easeIn);
+TweenTransition.registerCurve('easeOut', TweenTransition.Curves.easeOut);
+TweenTransition.registerCurve('easeInOut', TweenTransition.Curves.easeInOut);
+TweenTransition.registerCurve('easeOutBounce', TweenTransition.Curves.easeOutBounce);
+TweenTransition.registerCurve('spring', TweenTransition.Curves.spring);

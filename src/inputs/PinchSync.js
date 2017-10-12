@@ -1,98 +1,98 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
-define(function(require, exports, module) {
-    var TwoFingerSync = require('./TwoFingerSync');
-    var OptionsManager = require('../core/OptionsManager');
 
-    /**
-     * Handles piped in two-finger touch events to change position via pinching / expanding.
-     *   Emits 'start', 'update' and 'end' events with
-     *   position, velocity, touch ids, and distance between fingers.
-     *
-     * @class PinchSync
-     * @extends TwoFingerSync
-     * @constructor
-     * @param {Object} options default options overrides
-     * @param {Number} [options.scale] scale velocity by this factor
-     */
-    function PinchSync(options) {
-        TwoFingerSync.call(this);
+import TwoFingerSync from './TwoFingerSync.js';
+import OptionsManager from '../core/OptionsManager.js';
 
-        this.options = Object.create(PinchSync.DEFAULT_OPTIONS);
-        this._optionsManager = new OptionsManager(this.options);
-        if (options) this.setOptions(options);
 
-        this._displacement = 0;
-        this._previousDistance = 0;
-    }
+export default class PinchSync extends TwoFingerSync {
+  /**
+   * Handles piped in two-finger touch events to change position via pinching / expanding.
+   *   Emits 'start', 'update' and 'end' events with
+   *   position, velocity, touch ids, and distance between fingers.
+   *
+   * @class PinchSync
+   * @extends TwoFingerSync
+   * @constructor
+   * @param {Object} options default options overrides
+   * @param {Number} [options.scale] scale velocity by this factor
+   */
+  constructor(options) {
+      super();
 
-    PinchSync.prototype = Object.create(TwoFingerSync.prototype);
-    PinchSync.prototype.constructor = PinchSync;
+      this.options = Object.create(PinchSync.DEFAULT_OPTIONS);
+      this._optionsManager = new OptionsManager(this.options);
+      if (options) this.setOptions(options);
 
-    PinchSync.DEFAULT_OPTIONS = {
-        scale : 1
-    };
+      this._displacement = 0;
+      this._previousDistance = 0;
+  }
 
-    PinchSync.prototype._startUpdate = function _startUpdate(event) {
-        this._previousDistance = TwoFingerSync.calculateDistance(this.posA, this.posB);
-        this._displacement = 0;
 
-        this._eventOutput.emit('start', {
-            count: event.touches.length,
-            touches: [this.touchAId, this.touchBId],
-            distance: this._dist,
-            center: TwoFingerSync.calculateCenter(this.posA, this.posB)
-        });
-    };
+  static DEFAULT_OPTIONS = {
+      scale : 1
+  }
 
-    PinchSync.prototype._moveUpdate = function _moveUpdate(diffTime) {
-        var currDist = TwoFingerSync.calculateDistance(this.posA, this.posB);
-        var center = TwoFingerSync.calculateCenter(this.posA, this.posB);
+  _startUpdate(event) {
+      this._previousDistance = TwoFingerSync.calculateDistance(this.posA, this.posB);
+      this._displacement = 0;
 
-        var scale = this.options.scale;
-        var delta = scale * (currDist - this._previousDistance);
-        var velocity = delta / diffTime;
+      this._eventOutput.emit('start', {
+          count: event.touches.length,
+          touches: [this.touchAId, this.touchBId],
+          distance: this._dist,
+          center: TwoFingerSync.calculateCenter(this.posA, this.posB)
+      });
+  }
 
-        this._previousDistance = currDist;
-        this._displacement += delta;
+  _moveUpdate(diffTime) {
+      let currDist = TwoFingerSync.calculateDistance(this.posA, this.posB);
+      let center = TwoFingerSync.calculateCenter(this.posA, this.posB);
 
-        this._eventOutput.emit('update', {
-            delta : delta,
-            velocity: velocity,
-            distance: currDist,
-            displacement: this._displacement,
-            center: center,
-            touches: [this.touchAId, this.touchBId]
-        });
-    };
+      let scale = this.options.scale;
+      let delta = scale * (currDist - this._previousDistance);
+      let velocity = delta / diffTime;
 
-    /**
-     * Return entire options dictionary, including defaults.
-     *
-     * @method getOptions
-     * @return {Object} configuration options
-     */
-    PinchSync.prototype.getOptions = function getOptions() {
-        return this.options;
-    };
+      this._previousDistance = currDist;
+      this._displacement += delta;
 
-    /**
-     * Set internal options, overriding any default options
-     *
-     * @method setOptions
-     *
-     * @param {Object} [options] overrides of default options
-     * @param {Number} [options.scale] scale velocity by this factor
-     */
-    PinchSync.prototype.setOptions = function setOptions(options) {
-        return this._optionsManager.setOptions(options);
-    };
+      this._eventOutput.emit('update', {
+          delta : delta,
+          velocity: velocity,
+          distance: currDist,
+          displacement: this._displacement,
+          center: center,
+          touches: [this.touchAId, this.touchBId]
+      });
+  }
 
-    module.exports = PinchSync;
-});
+  /**
+   * Return entire options dictionary, including defaults.
+   *
+   * @method getOptions
+   * @return {Object} configuration options
+   */
+  getOptions() {
+      return this.options;
+  }
+
+  /**
+   * Set internal options, overriding any default options
+   *
+   * @method setOptions
+   *
+   * @param {Object} [options] overrides of default options
+   * @param {Number} [options.scale] scale velocity by this factor
+   */
+  setOptions(options) {
+      return this._optionsManager.setOptions(options);
+  }
+
+}

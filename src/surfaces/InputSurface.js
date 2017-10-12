@@ -1,16 +1,20 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function (require, exports, module) {
-  var Surface = require('../core/Surface');
-  var DOMBuffer = require('../core/DOMBuffer');
-  var staticInherits = require('../utilities/StaticInherit.js').staticInherits;
+ import Surface from '../core/Surface.js';
+ import DOMBuffer from '../core/DOMBuffer.js';
+
+export default class InputSurface extends Surface {
+
+  elementType = 'input';
+  elementClass = 'famous-surface';
 
   /**
    * A Famo.us surface in the form of an HTML input element.
@@ -24,29 +28,23 @@ define(function (require, exports, module) {
    * @param {string} [options.type] specifies the type of element to display (e.g. 'datetime', 'text', 'button', etc.)
    * @param {string} [options.value] value of text
    */
-  function InputSurface(options) {
+  constructor(options) {
+    super(...arguments);
     this._placeholder = options.placeholder !== undefined ? options.placeholder : '';
     this._value = options.value !== undefined ? options.value : '';
     this._type = options.type || 'text';
     this._name = options.name || '';
 
-    Surface.apply(this, arguments);
-
     this.on('click', this.focus.bind(this));
     /* TODO: Determine if this code needs to be here and if so whether it can be integrated with DOMEventHandler */
-    window.addEventListener('click', function (event) {
+    window.addEventListener('click', (event)=> {
       if (event.target !== this._currentTarget) this.blur();
-    }.bind(this));
+    });
   }
-  staticInherits(InputSurface, Surface);
-  InputSurface.prototype = Object.create(Surface.prototype);
-  InputSurface.prototype.constructor = InputSurface;
 
-  InputSurface.prototype.elementType = 'input';
-  InputSurface.prototype.elementClass = 'famous-surface';
 
-  InputSurface.prototype.setOptions = function setOptions(options) {
-    var newPlaceholder = options.placeholder !== undefined ? options.placeholder : '',
+  setOptions(options) {
+    let newPlaceholder = options.placeholder !== undefined ? options.placeholder : '',
       newValue = options.value !== undefined ? options.value : '',
       newType = options.type || 'text',
       newName = options.name || '';
@@ -59,8 +57,8 @@ define(function (require, exports, module) {
     this._type        = newType;
     this._name        = newName;
 
-    Surface.prototype.setOptions.call(this, options);
-  };
+    super.setOptions(options);
+  }
 
   /**
    * Set placeholder text.  Note: Triggers a repaint.
@@ -69,11 +67,11 @@ define(function (require, exports, module) {
    * @param {string} str Value to set the placeholder to.
    * @return {InputSurface} this, allowing method chaining.
    */
-  InputSurface.prototype.setPlaceholder = function setPlaceholder(str) {
+  setPlaceholder(str) {
     this._placeholder = str;
     this._contentDirty = true;
     return this;
-  };
+  }
 
   /**
    * Focus on the current input, pulling up the keyboard on mobile.
@@ -81,10 +79,10 @@ define(function (require, exports, module) {
    * @method focus
    * @return {InputSurface} this, allowing method chaining.
    */
-  InputSurface.prototype.focus = function focus() {
+  focus() {
     if (this._currentTarget) this._currentTarget.focus();
     return this;
-  };
+  }
 
   /**
    * Blur the current input, hiding the keyboard on mobile.
@@ -92,10 +90,10 @@ define(function (require, exports, module) {
    * @method blur
    * @return {InputSurface} this, allowing method chaining.
    */
-  InputSurface.prototype.blur = function blur() {
+  blur() {
     if (this._currentTarget) this._currentTarget.blur();
     return this;
-  };
+  }
 
   /**
    * Set the placeholder conent.
@@ -105,11 +103,11 @@ define(function (require, exports, module) {
    * @param {string} str Value to set the main input value to.
    * @return {InputSurface} this, allowing method chaining.
    */
-  InputSurface.prototype.setValue = function setValue(str) {
+  setValue(str) {
     this._value = str;
     this._contentDirty = true;
     return this;
-  };
+  }
 
   /**
    * Set the type of element to display conent.
@@ -119,11 +117,11 @@ define(function (require, exports, module) {
    * @param {string} str type of the input surface (e.g. 'button', 'text')
    * @return {InputSurface} this, allowing method chaining.
    */
-  InputSurface.prototype.setType = function setType(str) {
+  setType(str) {
     this._type = str;
     this._contentDirty = true;
     return this;
-  };
+  }
 
   /**
    * Get the value of the inner content of the element (e.g. the entered text)
@@ -131,13 +129,13 @@ define(function (require, exports, module) {
    * @method getValue
    * @return {string} value of element
    */
-  InputSurface.prototype.getValue = function getValue() {
+  getValue() {
     if (!this._currentTarget || this._contentDirty) {
       return this._value;
     } else {
       return this._currentTarget.value;
     }
-  };
+  }
 
   /**
    * Set the name attribute of the element.
@@ -147,11 +145,11 @@ define(function (require, exports, module) {
    * @param {string} str element name
    * @return {InputSurface} this, allowing method chaining.
    */
-  InputSurface.prototype.setName = function setName(str) {
+  setName(str) {
     this._name = str;
     this._contentDirty = true;
     return this;
-  };
+  }
 
   /**
    * Get the name attribute of the element.
@@ -159,9 +157,9 @@ define(function (require, exports, module) {
    * @method getName
    * @return {string} name of element
    */
-  InputSurface.prototype.getName = function getName() {
+  getName() {
     return this._name;
-  };
+  }
 
   /**
    * Place the document element this component manages into the document.
@@ -170,12 +168,10 @@ define(function (require, exports, module) {
    * @method deploy
    * @param {Node} target document parent of this container
    */
-  InputSurface.prototype.deploy = function deploy(target) {
+  deploy(target) {
     DOMBuffer.assignProperty(target, 'placeholder', this._placeholder || '');
     DOMBuffer.assignProperty(target, 'type', this._type);
     DOMBuffer.assignProperty(target, 'value', this._value);
     DOMBuffer.assignProperty(target, 'name', this._name);
-  };
-
-  module.exports = InputSurface;
-});
+  }
+}

@@ -1,179 +1,180 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Transform = require('./Transform');
-    var Modifier = require('./Modifier');
-    var RenderNode = require('./RenderNode');
+import Transform    from './Transform.js';
+import Modifier     from './Modifier.js';
+import RenderNode   from './RenderNode.js';
 
-    /**
-     * Builds and renders a scene graph based on a declarative structure definition.
-     * See the Scene examples in the examples distribution (http://github.com/Famous/examples.git).
-     *
-     * @class Scene
-     * @constructor
-     * @param {Object|Array|Spec} definition in the format of a render spec.
-     */
-    function Scene(definition) {
-        this.id = null;
-        this._objects = null;
+export default class Scene {
 
-        this.node = new RenderNode();
-        this._definition = null;
+  /**
+   * Builds and renders a scene graph based on a declarative structure definition.
+   * See the Scene examples in the examples distribution (http://github.com/Famous/examples.git).
+   *
+   * @class Scene
+   * @constructor
+   * @param {Object|Array|Spec} definition in the format of a render spec.
+   */
+  constructor(definition) {
+      this.id = null;
+      this._objects = null;
 
-        if (definition) this.load(definition);
-    }
+      this.node = new RenderNode();
+      this._definition = null;
 
-    var _MATRIX_GENERATORS = {
-        'translate': Transform.translate,
-        'rotate': Transform.rotate,
-        'rotateX': Transform.rotateX,
-        'rotateY': Transform.rotateY,
-        'rotateZ': Transform.rotateZ,
-        'rotateAxis': Transform.rotateAxis,
-        'scale': Transform.scale,
-        'skew': Transform.skew,
-        'matrix3d': function() {
-            return arguments;
-        }
-    };
+      if (definition) this.load(definition);
+  }
 
-    /**
-     * Clone this scene
-     *
-     * @method create
-     * @return {Scene} deep copy of this scene
-     */
-    Scene.prototype.create = function create() {
-        return new Scene(this._definition);
-    };
+  static _MATRIX_GENERATORS = {
+      'translate': Transform.translate,
+      'rotate': Transform.rotate,
+      'rotateX': Transform.rotateX,
+      'rotateY': Transform.rotateY,
+      'rotateZ': Transform.rotateZ,
+      'rotateAxis': Transform.rotateAxis,
+      'scale': Transform.scale,
+      'skew': Transform.skew,
+      'matrix3d': function() {
+          return arguments;
+      }
+  }
 
-    function _resolveTransformMatrix(matrixDefinition) {
-        for (var type in _MATRIX_GENERATORS) {
-            if (type in matrixDefinition) {
-                var args = matrixDefinition[type];
-                if (!(args instanceof Array)) args = [args];
-                return _MATRIX_GENERATORS[type].apply(this, args);
-            }
-        }
-    }
+  /**
+   * Clone this scene
+   *
+   * @method create
+   * @return {Scene} deep copy of this scene
+   */
+  create() {
+      return new Scene(this._definition);
+  }
 
-    // parse transform into tree of render nodes, doing matrix multiplication
-    // when available
-    function _parseTransform(definition) {
-        var transformDefinition = definition.transform;
-        var opacity = definition.opacity;
-        var origin = definition.origin;
-        var align = definition.align;
-        var size = definition.size;
-        var transform = Transform.identity;
-        if (transformDefinition instanceof Array) {
-            if (transformDefinition.length === 16 && typeof transformDefinition[0] === 'number') {
-                transform = transformDefinition;
-            }
-            else {
-                for (var i = 0; i < transformDefinition.length; i++) {
-                    transform = Transform.multiply(transform, _resolveTransformMatrix(transformDefinition[i]));
-                }
-            }
-        }
-        else if (transformDefinition instanceof Function) {
-            transform = transformDefinition;
-        }
-        else if (transformDefinition instanceof Object) {
-            transform = _resolveTransformMatrix(transformDefinition);
-        }
+  static _resolveTransformMatrix(matrixDefinition) {
+      for (let type in _MATRIX_GENERATORS) {
+          if (type in matrixDefinition) {
+              let args = matrixDefinition[type];
+              if (!(args instanceof Array)) args = [args];
+              return _MATRIX_GENERATORS[type].apply(this, args);
+          }
+      }
+  }
 
-        var result = new Modifier({
-            transform: transform,
-            opacity: opacity,
-            origin: origin,
-            align: align,
-            size: size
-        });
-        return result;
-    }
+  // parse transform into tree of render nodes, doing matrix multiplication
+  // when available
+  static _parseTransform(definition) {
+      let transformDefinition = definition.transform;
+      let opacity = definition.opacity;
+      let origin = definition.origin;
+      let align = definition.align;
+      let size = definition.size;
+      let transform = Transform.identity;
+      if (transformDefinition instanceof Array) {
+          if (transformDefinition.length === 16 && typeof transformDefinition[0] === 'number') {
+              transform = transformDefinition;
+          }
+          else {
+              for (let i = 0; i < transformDefinition.length; i++) {
+                  transform = Transform.multiply(transform, _resolveTransformMatrix(transformDefinition[i]));
+              }
+          }
+      }
+      else if (transformDefinition instanceof Function) {
+          transform = transformDefinition;
+      }
+      else if (transformDefinition instanceof Object) {
+          transform = _resolveTransformMatrix(transformDefinition);
+      }
 
-    function _parseArray(definition) {
-        var result = new RenderNode();
-        for (var i = 0; i < definition.length; i++) {
-            var obj = _parse.call(this, definition[i]);
-            if (obj) result.add(obj);
-        }
-        return result;
-    }
+      let result = new Modifier({
+          transform: transform,
+          opacity: opacity,
+          origin: origin,
+          align: align,
+          size: size
+      });
+      return result;
+  }
 
-    // parse object directly into tree of RenderNodes
-    function _parse(definition) {
-        var result;
-        var id;
-        if (definition instanceof Array) {
-            result = _parseArray.call(this, definition);
-        }
-        else {
-            id = this._objects.length;
-            if (definition.render && (definition.render instanceof Function)) {
-                result = definition;
-            }
-            else if (definition.target) {
-                var targetObj = _parse.call(this, definition.target);
-                var obj = _parseTransform.call(this, definition);
+  static _parseArray(definition) {
+      let result = new RenderNode();
+      for (let i = 0; i < definition.length; i++) {
+          let obj = _parse.call(this, definition[i]);
+          if (obj) result.add(obj);
+      }
+      return result;
+  }
 
-                result = new RenderNode(obj);
-                result.add(targetObj);
-                if (definition.id) this.id[definition.id] = obj;
-            }
-            else if (definition.id) {
-                result = new RenderNode();
-                this.id[definition.id] = result;
-            }
-        }
-        this._objects[id] = result;
-        return result;
-    }
+  // parse object directly into tree of RenderNodes
+  static _parse(definition) {
+      let result;
+      let id;
+      if (definition instanceof Array) {
+          result = _parseArray.call(this, definition);
+      }
+      else {
+          id = this._objects.length;
+          if (definition.render && (definition.render instanceof Function)) {
+              result = definition;
+          }
+          else if (definition.target) {
+              let targetObj = _parse.call(this, definition.target);
+              let obj = _parseTransform.call(this, definition);
 
-    /**
-     * Builds and renders a scene graph based on a canonical declarative scene definition.
-     * See examples/Scene/example.js.
-     *
-     * @method load
-     * @param {Object} definition definition in the format of a render spec.
-     */
-    Scene.prototype.load = function load(definition) {
-        this._definition = definition;
-        this.id = {};
-        this._objects = [];
-        this.node.set(_parse.call(this, definition));
-    };
+              result = new RenderNode(obj);
+              result.add(targetObj);
+              if (definition.id) this.id[definition.id] = obj;
+          }
+          else if (definition.id) {
+              result = new RenderNode();
+              this.id[definition.id] = result;
+          }
+      }
+      this._objects[id] = result;
+      return result;
+  }
 
-    /**
-     * Add renderables to this component's render tree
-     *
-     * @method add
-     *
-     * @param {Object} obj renderable object
-     * @return {RenderNode} Render wrapping provided object, if not already a RenderNode
-     */
-    Scene.prototype.add = function add() {
-        return this.node.add.apply(this.node, arguments);
-    };
+  /**
+   * Builds and renders a scene graph based on a canonical declarative scene definition.
+   * See examples/Scene/example.js.
+   *
+   * @method load
+   * @param {Object} definition definition in the format of a render spec.
+   */
+  load(definition) {
+      this._definition = definition;
+      this.id = {};
+      this._objects = [];
+      this.node.set(_parse.call(this, definition));
+  }
 
-    /**
-     * Generate a render spec from the contents of this component.
-     *
-     * @private
-     * @method render
-     * @return {number} Render spec for this component
-     */
-    Scene.prototype.render = function render() {
-        return this.node.render.apply(this.node, arguments);
-    };
+  /**
+   * Add renderables to this component's render tree
+   *
+   * @method add
+   *
+   * @param {Object} obj renderable object
+   * @return {RenderNode} Render wrapping provided object, if not already a RenderNode
+   */
+  add() {
+      return this.node.add.apply(this.node, arguments);
+  }
 
-    module.exports = Scene;
-});
+  /**
+   * Generate a render spec from the contents of this component.
+   *
+   * @private
+   * @method render
+   * @return {number} Render spec for this component
+   */
+  render() {
+      return this.node.render.apply(this.node, arguments);
+  }
+
+}

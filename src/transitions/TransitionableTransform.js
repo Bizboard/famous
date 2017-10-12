@@ -1,17 +1,18 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Transitionable = require('./Transitionable');
-    var Transform = require('../core/Transform');
-    var Utility = require('../utilities/Utility');
+import Transitionable from './Transitionable.js';
+import Transform from '../core/Transform.js';
+import Utility from '../utilities/Utility.js';
 
+export default class TransitionableTransform {
     /**
      * A class for transitioning the state of a Transform by transitioning
      * its translate, scale, skew and rotate components independently.
@@ -21,7 +22,7 @@ define(function(require, exports, module) {
      *
      * @param [transform=Transform.identity] {Transform} The initial transform state
      */
-    function TransitionableTransform(transform) {
+    constructor(transform) {
         this._final = Transform.identity.slice();
 
         this._finalTranslate = [0, 0, 0];
@@ -37,7 +38,7 @@ define(function(require, exports, module) {
         if (transform) this.set(transform);
     }
 
-    function _build() {
+    _build() {
         return Transform.build({
             translate: this.translate.get(),
             rotate: this.rotate.get(),
@@ -46,7 +47,7 @@ define(function(require, exports, module) {
         });
     }
 
-    function _buildFinal() {
+    _buildFinal() {
         return Transform.build({
             translate: this._finalTranslate,
             rotate: this._finalRotate,
@@ -66,12 +67,12 @@ define(function(require, exports, module) {
      * @param [callback] {Function} Callback
      * @return {TransitionableTransform}
      */
-    TransitionableTransform.prototype.setTranslate = function setTranslate(translate, transition, callback) {
+    setTranslate(translate, transition, callback) {
         this._finalTranslate = translate;
-        this._final = _buildFinal.call(this);
+        this._final = this._buildFinal();
         this.translate.set(translate, transition, callback);
         return this;
-    };
+    }
 
     /**
      * An optimized way of setting only the scale component of a Transform
@@ -84,12 +85,12 @@ define(function(require, exports, module) {
      * @param [callback] {Function} Callback
      * @return {TransitionableTransform}
      */
-    TransitionableTransform.prototype.setScale = function setScale(scale, transition, callback) {
+    setScale(scale, transition, callback) {
         this._finalScale = scale;
-        this._final = _buildFinal.call(this);
+        this._final = this._buildFinal();
         this.scale.set(scale, transition, callback);
         return this;
-    };
+    }
 
     /**
      * An optimized way of setting only the rotational component of a Transform
@@ -102,12 +103,12 @@ define(function(require, exports, module) {
      * @param [callback] {Function} Callback
      * @return {TransitionableTransform}
      */
-    TransitionableTransform.prototype.setRotate = function setRotate(eulerAngles, transition, callback) {
+    setRotate(eulerAngles, transition, callback) {
         this._finalRotate = eulerAngles;
-        this._final = _buildFinal.call(this);
+        this._final = this._buildFinal();
         this.rotate.set(eulerAngles, transition, callback);
         return this;
-    };
+    }
 
     /**
      * An optimized way of setting only the skew component of a Transform
@@ -120,12 +121,12 @@ define(function(require, exports, module) {
      * @param [callback] {Function} Callback
      * @return {TransitionableTransform}
      */
-    TransitionableTransform.prototype.setSkew = function setSkew(skewAngles, transition, callback) {
+    setSkew(skewAngles, transition, callback) {
         this._finalSkew = skewAngles;
-        this._final = _buildFinal.call(this);
+        this._final = this._buildFinal();
         this.skew.set(skewAngles, transition, callback);
         return this;
-    };
+    }
 
     /**
      * Setter for a TransitionableTransform with optional parameters to transition
@@ -139,7 +140,7 @@ define(function(require, exports, module) {
      * @param [callback] {Function} Callback
      * @return {TransitionableTransform}
      */
-    TransitionableTransform.prototype.set = function set(transform, transition, callback) {
+    set(transform, transition, callback) {
         var components = Transform.interpret(transform);
 
         this._finalTranslate = components.translate;
@@ -154,7 +155,7 @@ define(function(require, exports, module) {
         this.skew.set(components.skew, transition, _callback);
         this.scale.set(components.scale, transition, _callback);
         return this;
-    };
+    }
 
     /**
      * Sets the default transition to use for transitioning betwen Transform states
@@ -163,12 +164,12 @@ define(function(require, exports, module) {
      *
      * @param transition {Object} Transition definition
      */
-    TransitionableTransform.prototype.setDefaultTransition = function setDefaultTransition(transition) {
+    setDefaultTransition(transition) {
         this.translate.setDefault(transition);
         this.rotate.setDefault(transition);
         this.skew.setDefault(transition);
         this.scale.setDefault(transition);
-    };
+    }
 
     /**
      * Getter. Returns the current state of the Transform
@@ -177,12 +178,12 @@ define(function(require, exports, module) {
      *
      * @return {Transform}
      */
-    TransitionableTransform.prototype.get = function get() {
+    get() {
         if (this.isActive()) {
-            return _build.call(this);
+            return this._build();
         }
         else return this._final;
-    };
+    }
 
     /**
      * Get the destination state of the Transform
@@ -191,9 +192,9 @@ define(function(require, exports, module) {
      *
      * @return Transform {Transform}
      */
-    TransitionableTransform.prototype.getFinal = function getFinal() {
+    getFinal() {
         return this._final;
-    };
+    }
 
     /**
      * Determine if the TransitionalTransform is currently transitioning
@@ -202,16 +203,16 @@ define(function(require, exports, module) {
      *
      * @return {Boolean}
      */
-    TransitionableTransform.prototype.isActive = function isActive() {
+    isActive() {
         return this.translate.isActive() || this.rotate.isActive() || this.scale.isActive() || this.skew.isActive();
-    };
+    }
 
     /**
      * Halts the transition
      *
      * @method halt
      */
-    TransitionableTransform.prototype.halt = function halt() {
+    halt() {
         this.translate.halt();
         this.rotate.halt();
         this.skew.halt();
@@ -224,7 +225,5 @@ define(function(require, exports, module) {
         this._finalScale = this.scale.get();
 
         return this;
-    };
-
-    module.exports = TransitionableTransform;
-});
+    }
+}

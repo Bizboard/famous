@@ -1,77 +1,71 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    /**
-     * A singleton that maintains a global registry of Surfaces.
-     *   Private.
-     *
-     * @private
-     * @static
-     * @class Entity
-     */
 
-    var entities = [];
+export default class Entity {
 
-    /**
-     * Get entity from global index.
-     *
-     * @private
-     * @method get
-     * @param {Number} id entity registration id
-     * @return {Surface} entity in the global index
-     */
-    function get(id) {
-        return entities[id];
-    }
+  /**
+   * A singleton that maintains a global registry of Surfaces.
+   *   Private.
+   *
+   * @private
+   * @static
+   */
+  static entities = [];
 
-    /**
-     * Overwrite entity in the global index
-     *
-     * @private
-     * @method set
-     * @param {Number} id entity registration id
-     * @param {Surface} entity to add to the global index
-     */
-    function set(id, entity) {
-        entities[id] = entity;
-    }
+  /**
+   * Get entity from global index.
+   *
+   * @private
+   * @method get
+   * @param {Number} id entity registration id
+   * @return {Surface} entity in the global index
+   */
+   static get(id) {
+      return entities[id];
+  }
 
-    /**
-     * Add entity to global index
-     *
-     * @private
-     * @method register
-     * @param {Surface} entity to add to global index
-     * @return {Number} new id
-     */
-    function register(entity) {
-        var id = entities.length;
-        set(id, entity);
-        return id;
-    }
+  /**
+   * Overwrite entity in the global index
+   *
+   * @private
+   * @method set
+   * @param {Number} id entity registration id
+   * @param {Surface} entity to add to the global index
+   */
+  static set(id, entity) {
+      entities[id] = entity;
+  }
 
-    /**
-     * Remove entity from global index
-     *
-     * @private
-     * @method unregister
-     * @param {Number} id entity registration id
-     */
-    function unregister(id) {
-        set(id, null);
-    }
+  /**
+   * Add entity to global index
+   *
+   * @private
+   * @method register
+   * @param {Surface} entity to add to global index
+   * @return {Number} new id
+   */
+   static register(entity) {
+      var id = entities.length;
+      set(id, entity);
+      return id;
+  }
 
-    module.exports = {
-        register: register,
-        unregister: unregister,
-        get: get,
-        set: set
-    };
-});
+  /**
+   * Remove entity from global index
+   *
+   * @private
+   * @method unregister
+   * @param {Number} id entity registration id
+   */
+   static unregister(id) {
+      set(id, null);
+  }
+}

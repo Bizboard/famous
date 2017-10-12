@@ -1,17 +1,19 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: felix@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Transform = require('../core/Transform');
-    var Transitionable = require('../transitions/Transitionable');
-    var RenderNode = require('../core/RenderNode');
-    var OptionsManager = require('../core/OptionsManager');
+import Transform from '../core/Transform.js';
+import Transitionable from '../transitions/Transitionable.js';
+import RenderNode from '../core/RenderNode.js';
+import OptionsManager from '../core/OptionsManager.js';
+
+export default class Flipper {
 
     /**
      * Allows you to link two renderables as front and back sides that can be
@@ -24,7 +26,7 @@ define(function(require, exports, module) {
      * @param {Transition} [options.transition=true] The transition executed when flipping your Flipper instance.
      * @param {Direction} [options.direction=Flipper.DIRECTION_X] Direction specifies the axis of rotation.
      */
-    function Flipper(options) {
+    constructor(options) {
         this.options = Object.create(Flipper.DEFAULT_OPTIONS);
         this._optionsManager = new OptionsManager(this.options);
         if (options) this.setOptions(options);
@@ -37,15 +39,15 @@ define(function(require, exports, module) {
         this.flipped = false;
     }
 
-    Flipper.DIRECTION_X = 0;
-    Flipper.DIRECTION_Y = 1;
+    static DIRECTION_X = 0;
+    static DIRECTION_Y = 1;
 
-    var SEPERATION_LENGTH = 1;
+    static SEPERATION_LENGTH = 1;
 
-    Flipper.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
         transition: true,
         direction: Flipper.DIRECTION_X
-    };
+    }
 
     /**
      * Toggles the rotation between the front and back renderables
@@ -54,11 +56,11 @@ define(function(require, exports, module) {
      * @param {Object} [transition] Transition definition
      * @param {Function} [callback] Callback
      */
-    Flipper.prototype.flip = function flip(transition, callback) {
-        var angle = this.flipped ? 0 : Math.PI;
+    flip(transition, callback) {
+        let angle = this.flipped ? 0 : Math.PI;
         this.setAngle(angle, transition, callback);
         this.flipped = !this.flipped;
-    };
+    }
 
     /**
      * Basic setter to the angle
@@ -68,11 +70,11 @@ define(function(require, exports, module) {
      * @param {Object} [transition] Transition definition
      * @param {Function} [callback] Callback
      */
-    Flipper.prototype.setAngle = function setAngle(angle, transition, callback) {
+    setAngle(angle, transition, callback) {
         if (transition === undefined) transition = this.options.transition;
         if (this.angle.isActive()) this.angle.halt();
         this.angle.set(angle, transition, callback);
-    };
+    }
 
     /**
      * Patches the Flipper instance's options with the passed-in ones.
@@ -80,9 +82,9 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param {Options} options An object of configurable options for the Flipper instance.
      */
-    Flipper.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         return this._optionsManager.setOptions(options);
-    };
+    }
 
     /**
      * Adds the passed-in renderable to the view associated with the 'front' of the Flipper instance.
@@ -91,9 +93,9 @@ define(function(require, exports, module) {
      * @chainable
      * @param {Object} node The renderable you want to add to the front.
      */
-    Flipper.prototype.setFront = function setFront(node) {
+    setFront(node) {
         this.frontNode = node;
-    };
+    }
 
     /**
      * Adds the passed-in renderable to the view associated with the 'back' of the Flipper instance.
@@ -102,9 +104,9 @@ define(function(require, exports, module) {
      * @chainable
      * @param {Object} node The renderable you want to add to the back.
      */
-    Flipper.prototype.setBack = function setBack(node) {
+    setBack(node) {
         this.backNode = node;
-    };
+    }
 
     /**
      * Generate a render spec from the contents of this component.
@@ -113,11 +115,11 @@ define(function(require, exports, module) {
      * @method render
      * @return {Number} Render spec for this component
      */
-    Flipper.prototype.render = function render() {
-        var angle = this.angle.get();
+    render() {
+        let angle = this.angle.get();
 
-        var frontTransform;
-        var backTransform;
+        let frontTransform;
+        let backTransform;
 
         if (this.options.direction === Flipper.DIRECTION_X) {
             frontTransform = Transform.rotateY(angle);
@@ -128,7 +130,7 @@ define(function(require, exports, module) {
             backTransform = Transform.rotateX(angle + Math.PI);
         }
 
-        var result = [];
+        let result = [];
         if (this.frontNode){
             result.push({
                 transform: frontTransform,
@@ -144,7 +146,5 @@ define(function(require, exports, module) {
         }
 
         return result;
-    };
-
-    module.exports = Flipper;
-});
+    }
+}

@@ -1,62 +1,56 @@
-/**
- * Created by lundfall on 02/06/2017.
- */
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+* any variations, changes and additions are NPOSL-3 licensed.
+*
+* @authors Karl Lundfall, Hans van den Akker
+* @license NPOSL-3.0
+* @copyright Arva 2015-2017
+*/
 
+export default class DOMBuffer {
 
-define(function (require, exports, module) {
+  static enqueuedOperations = [];
 
-  /**
-   * Singleton class optimized for high performance in DOM updates. All DOM updates that are done through this class will
-   * be cached and can be flushed at the same order the instructions came in.
-   *
-   *
-   * @type {{}}
-   */
-  var DOMBuffer = {};
-  var enqueuedOperations = [];
+  static assignProperty(object, property, value) {
+    DOMBuffer.enqueuedOperations.push({ data: [object, property, value], operation: 'assignProperty' });
+  }
 
-
-  DOMBuffer.assignProperty = function (object, property, value) {
-    enqueuedOperations.push({ data: [object, property, value], operation: 'assignProperty' });
+  static setAttribute(element, attribute, value) {
+    DOMBuffer.enqueuedOperations.push({ data: [element, attribute, value], operation: 'setAttribute' });
   };
 
-  DOMBuffer.setAttribute = function (element, attribute, value) {
-    enqueuedOperations.push({ data: [element, attribute, value], operation: 'setAttribute' });
+  static addToObject(object, value) {
+    DOMBuffer.enqueuedOperations.push({ data: [object, value], operation: 'addToObject' });
   };
 
-  DOMBuffer.addToObject = function (object, value) {
-    enqueuedOperations.push({ data: [object, value], operation: 'addToObject' });
+  static setAttributeOnDescendants(element, attribute, attributeValue) {
+    DOMBuffer.enqueuedOperations.push({ data: [element, attribute, attributeValue], operation: 'setAttributeOnDescendants' });
   };
 
-  DOMBuffer.setAttributeOnDescendants = function (element, attribute, attributeValue) {
-    enqueuedOperations.push({ data: [element, attribute, attributeValue], operation: 'setAttributeOnDescendants' });
+  static removeFromObject(object, attribute) {
+    DOMBuffer.enqueuedOperations.push({ data: [object, attribute], operation: 'removeFromObject' });
   };
 
-  DOMBuffer.removeFromObject = function (object, attribute) {
-    enqueuedOperations.push({ data: [object, attribute], operation: 'removeFromObject' });
+  static removeAttribute(element, attribute) {
+    DOMBuffer.enqueuedOperations.push({ data: [element, attribute], operation: 'removeAttribute' });
   };
 
-  DOMBuffer.removeAttribute = function (element, attribute) {
-    enqueuedOperations.push({ data: [element, attribute], operation: 'removeAttribute' });
+  static removeChild(parent, childToRemove) {
+    DOMBuffer.enqueuedOperations.push({ data: [parent, childToRemove], operation: 'removeChild' });
   };
 
-  DOMBuffer.removeChild = function (parent, childToRemove) {
-    enqueuedOperations.push({ data: [parent, childToRemove], operation: 'removeChild' });
+  static appendChild(parent, childToAppend) {
+    DOMBuffer.enqueuedOperations.push({ data: [parent, childToAppend], operation: 'appendChild' });
   };
 
-  DOMBuffer.appendChild = function (parent, childToAppend) {
-    enqueuedOperations.push({ data: [parent, childToAppend], operation: 'appendChild' });
+  static insertBefore(parent, childBefore, childToInsert) {
+    DOMBuffer.enqueuedOperations.push({ data: [parent, childBefore, childToInsert], operation: 'insertBefore' });
   };
 
-  DOMBuffer.insertBefore = function (parent, childBefore, childToInsert) {
-    enqueuedOperations.push({ data: [parent, childBefore, childToInsert], operation: 'insertBefore' });
-  };
-
-  DOMBuffer.flushUpdates = function () {
-    for (var index = 0; index < enqueuedOperations.length; index++) {
-      var enqueuedOperation = enqueuedOperations[index];
-      var operationName = enqueuedOperation.operation;
-      var data = enqueuedOperation.data;
+  static flushUpdates() {
+    for (let index = 0; index < DOMBuffer.enqueuedOperations.length; index++) {
+      let enqueuedOperation = DOMBuffer.enqueuedOperations[index];
+      let operationName = DOMBuffer.enqueuedOperation.operation;
+      let data = DOMBuffer.enqueuedOperation.data;
       switch (operationName) {
         case 'appendChild':
           data[0].appendChild(data[1]);
@@ -97,9 +91,6 @@ define(function (require, exports, module) {
           throw new Error(`Internal problem in DOMBuffer: Unkown operation: "${operationName}"`);
       }
     }
-    enqueuedOperations = [];
-  };
-
-  module.exports = DOMBuffer;
-});
-
+    DOMBuffer.enqueuedOperations = [];
+  }
+}

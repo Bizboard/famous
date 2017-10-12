@@ -1,15 +1,17 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Constraint = require('./Constraint');
-    var Vector = require('../../math/Vector');
+import Constraint from './Constraint.js';
+import Vector from '../../math/Vector.js';
+
+export default class Surface extends Constraint {
 
     /**
      *  A constraint that keeps a physics body on a given implicit surface
@@ -23,27 +25,22 @@ define(function(require, exports, module) {
      *  @param {Number} [options.period] The spring-like reaction when the constraint is violated.
      *  @param {Number} [options.dampingRatio] The damping-like reaction when the constraint is violated.
      */
-    function Surface(options) {
-        this.options = Object.create(Surface.DEFAULT_OPTIONS);
-        if (options) this.setOptions(options);
+    constructor(options) {
+      super(...arguments);
+      this.options = Object.create(Surface.DEFAULT_OPTIONS);
+      if (options) this.setOptions(options);
 
-        this.J = new Vector();
-        this.impulse  = new Vector();
-
-        Constraint.call(this);
+      this.J = new Vector();
+      this.impulse  = new Vector();
     }
 
-    Surface.prototype = Object.create(Constraint.prototype);
-    Surface.prototype.constructor = Surface;
-
-    Surface.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
         equation : undefined,
         period : 0,
         dampingRatio : 0
-    };
+    }
 
-    /** @const */ var epsilon = 1e-7;
-    /** @const */ var pi = Math.PI;
+    /** @const */ static epsilon = 1e-7;
 
     /**
      * Basic options setter
@@ -51,9 +48,9 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param options {Objects}
      */
-    Surface.prototype.setOptions = function setOptions(options) {
-        for (var key in options) this.options[key] = options[key];
-    };
+    setOptions(options) {
+        for (let key in options) this.options[key] = options[key];
+    }
 
     /**
      * Adds a surface impulse to a physics body.
@@ -63,54 +60,52 @@ define(function(require, exports, module) {
      * @param source {Body} Not applicable
      * @param dt {Number} Delta time
      */
-    Surface.prototype.applyConstraint = function applyConstraint(targets, source, dt) {
-        var impulse = this.impulse;
-        var J       = this.J;
-        var options = this.options;
+    applyConstraint(targets, source, dt) {
+        let impulse = this.impulse;
+        let J       = this.J;
+        let options = this.options;
 
-        var f = options.equation;
-        var dampingRatio = options.dampingRatio;
-        var period = options.period;
+        let f = options.equation;
+        let dampingRatio = options.dampingRatio;
+        let period = options.period;
 
-        for (var i = 0; i < targets.length; i++) {
-            var particle = targets[i];
+        for (let i = 0; i < targets.length; i++) {
+            let particle = targets[i];
 
-            var v = particle.velocity;
-            var p = particle.position;
-            var m = particle.mass;
+            let v = particle.velocity;
+            let p = particle.position;
+            let m = particle.mass;
 
-            var gamma;
-            var beta;
+            let gamma;
+            let beta;
 
             if (period === 0) {
                 gamma = 0;
                 beta = 1;
             }
             else {
-                var c = 4 * m * pi * dampingRatio / period;
-                var k = 4 * m * pi * pi / (period * period);
+                let c = 4 * m * Math.PI * dampingRatio / period;
+                let k = 4 * m * Math.PI * Math.PI / (period * period);
 
                 gamma = 1 / (c + dt*k);
                 beta  = dt*k / (c + dt*k);
             }
 
-            var x = p.x;
-            var y = p.y;
-            var z = p.z;
+            let x = p.x;
+            let y = p.y;
+            let z = p.z;
 
-            var f0  = f(x, y, z);
-            var dfx = (f(x + epsilon, p, p) - f0) / epsilon;
-            var dfy = (f(x, y + epsilon, p) - f0) / epsilon;
-            var dfz = (f(x, y, p + epsilon) - f0) / epsilon;
+            let f0  = f(x, y, z);
+            let dfx = (f(x + epsilon, p, p) - f0) / epsilon;
+            let dfy = (f(x, y + epsilon, p) - f0) / epsilon;
+            let dfz = (f(x, y, p + epsilon) - f0) / epsilon;
             J.setXYZ(dfx, dfy, dfz);
 
-            var antiDrift = beta/dt * f0;
-            var lambda = -(J.dot(v) + antiDrift) / (gamma + dt * J.normSquared() / m);
+            let antiDrift = beta/dt * f0;
+            let lambda = -(J.dot(v) + antiDrift) / (gamma + dt * J.normSquared() / m);
 
             impulse.set(J.mult(dt*lambda));
             particle.applyImpulse(impulse);
         }
-    };
-
-    module.exports = Surface;
-});
+    }
+}

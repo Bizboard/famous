@@ -1,17 +1,20 @@
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Surface = require('../core/Surface');
-    var DOMBuffer = require('famous/core/DOMBuffer');
-    var staticInherits = require('../utilities/StaticInherit.js').staticInherits;
+import Surface from '../core/Surface.js';
+import DOMBuffer from '../core/DOMBuffer.js';
+
+export default class ImageSurface extends Surface {
+
+  elementType = 'img';
+  elementClass = 'famous-surface';
 
     /**
      * A surface containing image content.
@@ -23,55 +26,50 @@ define(function(require, exports, module) {
      * @constructor
      * @param {Object} [options] overrides of default options
      */
-    function ImageSurface(options) {
-        this._imageUrl = undefined;
-        Surface.apply(this, arguments);
-        this.on('load', (function() {
-          if(this.size && (this.size[0] === true || this.size[1] === true)){
-            this._eventOutput.emit('resize');
-          }
-        }).bind(this));
+    constructor(options) {
+      super(...arguments);
+      this._imageUrl = undefined;
+      this.on('load', ()=> {
+        if(this.size && (this.size[0] === true || this.size[1] === true)){
+          this._eventOutput.emit('resize');
+        }
+      });
     }
 
-    var urlCache = [];
-    var countCache = [];
-    var nodeCache = [];
-    var cacheEnabled = true;
+    static urlCache = [];
+    static countCache = [];
+    static nodeCache = [];
+    static cacheEnabled = true;
 
-    ImageSurface.enableCache = function enableCache() {
+    static enableCache = function enableCache() {
         cacheEnabled = true;
-    };
+    }
 
-    ImageSurface.disableCache = function disableCache() {
+    static disableCache = function disableCache() {
         cacheEnabled = false;
-    };
+    }
 
-    ImageSurface.clearCache = function clearCache() {
+    static clearCache = function clearCache() {
         urlCache = [];
         countCache = [];
         nodeCache = [];
-    };
+    }
 
-    ImageSurface.getCache = function getCache() {
+    static getCache = function getCache() {
         return {
             urlCache: urlCache,
             countCache: countCache,
             nodeCache: nodeCache
         };
-    };
-
-    staticInherits(ImageSurface, Surface);
-    ImageSurface.prototype.constructor = ImageSurface;
-    ImageSurface.prototype.elementType = 'img';
-    ImageSurface.prototype.elementClass = 'famous-surface';
+    }
 
     /**
      * Set content URL.  This will cause a re-rendering.
      * @method setContent
      * @param {string} imageUrl
      */
-    ImageSurface.prototype.setContent = function setContent(imageUrl) {
-        var urlIndex = urlCache.indexOf(this._imageUrl);
+    setContent(imageUrl) {
+        let urlIndex = urlCache.indexOf(this._imageUrl);
         if (urlIndex !== -1) {
             if (countCache[urlIndex] === 1) {
                 urlCache.splice(urlIndex, 1);
@@ -93,7 +91,7 @@ define(function(require, exports, module) {
 
         this._imageUrl = imageUrl;
         this._contentDirty = true;
-    };
+    }
 
     /**
      * Place the document element that this component manages into the document.
@@ -102,15 +100,15 @@ define(function(require, exports, module) {
      * @method deploy
      * @param {Node} target document parent of this container
      */
-    ImageSurface.prototype.deploy = function deploy(target) {
-        var urlIndex = urlCache.indexOf(this._imageUrl);
+    deploy(target) {
+        let urlIndex = urlCache.indexOf(this._imageUrl);
         if (nodeCache[urlIndex] === undefined && cacheEnabled) {
-            var img = new Image();
+            let img = new Image();
             img.src = this._imageUrl || '';
             nodeCache[urlIndex] = img;
         }
         DOMBuffer.assignProperty(target, 'src', this._imageUrl || '');
-    };
+    }
 
     /**
      * Remove this component and contained content from the document
@@ -120,9 +118,7 @@ define(function(require, exports, module) {
      *
      * @param {Node} target node to which the component was deployed
      */
-    ImageSurface.prototype.recall = function recall(target) {
+    recall(target) {
       DOMBuffer.assignProperty(target, 'src', '');
-    };
-
-    module.exports = ImageSurface;
-});
+    }
+}

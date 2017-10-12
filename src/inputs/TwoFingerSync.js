@@ -1,13 +1,16 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
-define(function(require, exports, module) {
-    var EventHandler = require('../core/EventHandler');
+
+import EventHandler from '../core/EventHandler.js';
+
+export default class TwoFingerSync {
 
     /**
      * Helper to PinchSync, RotateSync, and ScaleSync.  Generalized handling of
@@ -17,7 +20,7 @@ define(function(require, exports, module) {
      * @class TwoFingerSync
      * @constructor
      */
-    function TwoFingerSync() {
+    constructor() {
         this._eventInput = new EventHandler();
         this._eventOutput = new EventHandler();
 
@@ -33,76 +36,74 @@ define(function(require, exports, module) {
         this.posB = null;
         this.timestampB = 0;
 
-        this._eventInput.on('touchstart', this.handleStart.bind(this));
-        this._eventInput.on('touchmove', this.handleMove.bind(this));
-        this._eventInput.on('touchend', this.handleEnd.bind(this));
-        this._eventInput.on('touchcancel', this.handleEnd.bind(this));
+        this._eventInput.on('touchstart', this.handleStart);
+        this._eventInput.on('touchmove', this.handleMove);
+        this._eventInput.on('touchend', this.handleEnd);
+        this._eventInput.on('touchcancel', this.handleEnd);
     }
 
-    TwoFingerSync.calculateAngle = function(posA, posB) {
-        var diffX = posB[0] - posA[0];
-        var diffY = posB[1] - posA[1];
+    static calculateAngle = function(posA, posB) {
+        let diffX = posB[0] - posA[0];
+        let diffY = posB[1] - posA[1];
         return Math.atan2(diffY, diffX);
     };
 
-    TwoFingerSync.calculateDistance = function(posA, posB) {
-        var diffX = posB[0] - posA[0];
-        var diffY = posB[1] - posA[1];
+    static calculateDistance = function(posA, posB) {
+        let diffX = posB[0] - posA[0];
+        let diffY = posB[1] - posA[1];
         return Math.sqrt(diffX * diffX + diffY * diffY);
     };
 
-    TwoFingerSync.calculateCenter = function(posA, posB) {
+    static calculateCenter = function(posA, posB) {
         return [(posA[0] + posB[0]) / 2.0, (posA[1] + posB[1]) / 2.0];
     };
 
-    var _now = Date.now;
-
     // private
-    TwoFingerSync.prototype.handleStart = function handleStart(event) {
-        for (var i = 0; i < event.changedTouches.length; i++) {
-            var touch = event.changedTouches[i];
+    handleStart(event) {
+        for (let i = 0; i < event.changedTouches.length; i++) {
+            let touch = event.changedTouches[i];
             if (!this.touchAEnabled) {
                 this.touchAId = touch.identifier;
                 this.touchAEnabled = true;
                 this.posA = [touch.pageX, touch.pageY];
-                this.timestampA = _now();
+                this.timestampA = Date.now();
             }
             else if (!this.touchBEnabled) {
                 this.touchBId = touch.identifier;
                 this.touchBEnabled = true;
                 this.posB = [touch.pageX, touch.pageY];
-                this.timestampB = _now();
+                this.timestampB = Date.now();
                 this._startUpdate(event);
             }
         }
-    };
+    }
 
     // private
-    TwoFingerSync.prototype.handleMove = function handleMove(event) {
+    handleMove(event) {
         if (!(this.touchAEnabled && this.touchBEnabled)) return;
-        var prevTimeA = this.timestampA;
-        var prevTimeB = this.timestampB;
-        var diffTime;
-        for (var i = 0; i < event.changedTouches.length; i++) {
-            var touch = event.changedTouches[i];
+        let prevTimeA = this.timestampA;
+        let prevTimeB = this.timestampB;
+        let diffTime;
+        for (let i = 0; i < event.changedTouches.length; i++) {
+            let touch = event.changedTouches[i];
             if (touch.identifier === this.touchAId) {
                 this.posA = [touch.pageX, touch.pageY];
-                this.timestampA = _now();
+                this.timestampA = Date.now();
                 diffTime = this.timestampA - prevTimeA;
             }
             else if (touch.identifier === this.touchBId) {
                 this.posB = [touch.pageX, touch.pageY];
-                this.timestampB = _now();
+                this.timestampB = Date.now();
                 diffTime = this.timestampB - prevTimeB;
             }
         }
         if (diffTime) this._moveUpdate(diffTime);
-    };
+    }
 
     // private
-    TwoFingerSync.prototype.handleEnd = function handleEnd(event) {
-        for (var i = 0; i < event.changedTouches.length; i++) {
-            var touch = event.changedTouches[i];
+    handleEnd(event) {
+        for (let i = 0; i < event.changedTouches.length; i++) {
+            let touch = event.changedTouches[i];
             if (touch.identifier === this.touchAId || touch.identifier === this.touchBId) {
                 if (this.touchAEnabled && this.touchBEnabled) {
                     this._eventOutput.emit('end', {
@@ -116,7 +117,5 @@ define(function(require, exports, module) {
                 this.touchBId = 0;
             }
         }
-    };
-
-    module.exports = TwoFingerSync;
-});
+    }
+}

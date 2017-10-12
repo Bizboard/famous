@@ -1,47 +1,47 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    /**
-     * A few static methods.
-     *
-     * @class Utilities
-     * @static
-     */
-    var Utilities = {};
+export default class Utilities {
 
-    /**
-     * Constrain input to range.
-     *
-     * @method clamp
-     * @param {Number} value input
-     * @param {Array.Number} range [min, max]
-     * @static
-     */
-    Utilities.clamp = function clamp(value, range) {
-        return Math.max(Math.min(value, range[1]), range[0]);
-    };
+  /**
+   * A few static methods.
+   *
+   * @class Utilities
+   * @static
+   */
+  static Utilities = {};
 
-    /**
-     * Euclidean length of numerical array.
-     *
-     * @method length
-     * @param {Array.Number} array array of numbers
-     * @static
-     */
-    Utilities.length = function length(array) {
-        var distanceSquared = 0;
-        for (var i = 0; i < array.length; i++) {
-            distanceSquared += array[i] * array[i];
-        }
-        return Math.sqrt(distanceSquared);
-    };
+  /**
+   * Constrain input to range.
+   *
+   * @method clamp
+   * @param {Number} value input
+   * @param {Array.Number} range [min, max]
+   * @static
+   */
+  static clamp(value, range) {
+      return Math.max(Math.min(value, range[1]), range[0]);
+  }
 
-    module.exports = Utilities;
-});
+  /**
+   * Euclidean length of numerical array.
+   *
+   * @method length
+   * @param {Array.Number} array array of numbers
+   * @static
+   */
+  static length(array) {
+      let distanceSquared = 0;
+      for (let i = 0; i < array.length; i++) {
+          distanceSquared += array[i] * array[i];
+      }
+      return Math.sqrt(distanceSquared);
+  }
+}

@@ -1,15 +1,17 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Force = require('./Force');
-    var Vector = require('../../math/Vector');
+import Force from './Force.js';
+import Vector from '../../math/Vector.js';
+
+export default class Repulsion extends Force {
 
     /**
      *  Repulsion is a force that repels (attracts) bodies away (towards)
@@ -20,25 +22,22 @@ define(function(require, exports, module) {
      *  @extends Force
      *  @param {Object} options overwrites default options
      */
-    function Repulsion(options) {
-        this.options = Object.create(Repulsion.DEFAULT_OPTIONS);
-        if (options) this.setOptions(options);
+    constructor(options) {
+      super(...arguments);
+      this.options = Object.create(Repulsion.DEFAULT_OPTIONS);
+      if (options) this.setOptions(options);
 
-        //registers
-        this.disp  = new Vector();
-
-        Force.call(this);
+      //registers
+      this.disp  = new Vector();
     }
 
-    Repulsion.prototype = Object.create(Force.prototype);
-    Repulsion.prototype.constructor = Repulsion;
     /**
      * @property Repulsion.DECAY_FUNCTIONS
      * @type Object
      * @protected
      * @static
      */
-    Repulsion.DECAY_FUNCTIONS = {
+    static DECAY_FUNCTIONS = {
 
         /**
          * A linear decay function
@@ -59,8 +58,8 @@ define(function(require, exports, module) {
          * @param {Number} cutoff the minimum radius of influence
          */
         MORSE : function(r, cutoff) {
-            var r0 = (cutoff === 0) ? 100 : cutoff;
-            var rShifted = r + r0 * (1 - Math.log(2)); //shift by x-intercept
+            let r0 = (cutoff === 0) ? 100 : cutoff;
+            let rShifted = r + r0 * (1 - Math.log(2)); //shift by x-intercept
             return Math.max(1 - Math.pow(1 - Math.exp(rShifted/r0 - 1), 2), 0);
         },
 
@@ -93,7 +92,7 @@ define(function(require, exports, module) {
      * @protected
      * @static
      */
-    Repulsion.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
 
         /**
          * The strength of the force
@@ -153,14 +152,14 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param {Objects} options
      */
-    Repulsion.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         if (options.anchor !== undefined) {
             if (options.anchor.position instanceof Vector) this.options.anchor = options.anchor.position;
             if (options.anchor   instanceof Array)  this.options.anchor = new Vector(options.anchor);
             delete options.anchor;
         }
-        for (var key in options) this.options[key] = options[key];
-    };
+        for (let key in options) this.options[key] = options[key];
+    }
 
     /**
      * Adds a drag force to a physics body's force accumulator.
@@ -169,26 +168,26 @@ define(function(require, exports, module) {
      * @param targets {Array.Body}  Array of bodies to apply force to.
      * @param source {Body}         The source of the force
      */
-    Repulsion.prototype.applyForce = function applyForce(targets, source) {
-        var options     = this.options;
-        var force       = this.force;
-        var disp        = this.disp;
+    applyForce(targets, source) {
+        let options     = this.options;
+        let force       = this.force;
+        let disp        = this.disp;
 
-        var strength    = options.strength;
-        var anchor      = options.anchor || source.position;
-        var cap         = options.cap;
-        var cutoff      = options.cutoff;
-        var rMin        = options.range[0];
-        var rMax        = options.range[1];
-        var decayFn     = options.decayFunction;
+        let strength    = options.strength;
+        let anchor      = options.anchor || source.position;
+        let cap         = options.cap;
+        let cutoff      = options.cutoff;
+        let rMin        = options.range[0];
+        let rMax        = options.range[1];
+        let decayFn     = options.decayFunction;
 
         if (strength === 0) return;
 
-        var length = targets.length;
-        var particle;
-        var m1;
-        var p1;
-        var r;
+        let length = targets.length;
+        let particle;
+        let m1;
+        let p1;
+        let r;
 
         while (length--) {
             particle = targets[length];
@@ -206,8 +205,5 @@ define(function(require, exports, module) {
                 particle.applyForce(force);
             }
         }
-
-    };
-
-    module.exports = Repulsion;
-});
+    }
+}

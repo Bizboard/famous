@@ -1,17 +1,19 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Surface = require('../core/Surface');
-    var EventHandler = require('../core/EventHandler');
-    var RenderController = require('../views/RenderController');
+import Surface from '../core/Surface.js';
+import EventHandler from '../core/EventHandler.js';
+import RenderController from '../views/RenderController.js';
 
+
+export default class ToggleButton {
     /**
      * A view for transitioning between two surfaces based
      *  on a 'on' and 'off' state
@@ -22,7 +24,7 @@ define(function(require, exports, module) {
      *
      * @param {object} options overrides of default options
      */
-    function ToggleButton(options) {
+    constructor(options) {
         this.options = {
             content: ['', ''],
             offClasses: ['off'],
@@ -38,15 +40,15 @@ define(function(require, exports, module) {
         EventHandler.setOutputHandler(this, this._eventOutput);
 
         this.offSurface = new Surface();
-        this.offSurface.on('click', function() {
+        this.offSurface.on('click', ()=> {
             if (this.options.toggleMode !== ToggleButton.OFF) this.select();
-        }.bind(this));
+        });
         this.offSurface.pipe(this._eventOutput);
 
         this.onSurface = new Surface();
-        this.onSurface.on('click', function() {
+        this.onSurface.on('click', ()=> {
             if (this.options.toggleMode !== ToggleButton.ON) this.deselect();
-        }.bind(this));
+        });
         this.onSurface.pipe(this._eventOutput);
 
         this.arbiter = new RenderController({
@@ -58,11 +60,13 @@ define(function(require, exports, module) {
         if (options) this.setOptions(options);
     }
 
-    ToggleButton.with = Surface.with;
+    static with() {
+      return Surface.with(...arguments);
+    }
 
-    ToggleButton.OFF = 0;
-    ToggleButton.ON = 1;
-    ToggleButton.TOGGLE = 2;
+    static OFF = 0;
+    static ON = 1;
+    static TOGGLE = 2;
 
     /**
      * Transition towards the 'on' state and dispatch an event to
@@ -74,14 +78,14 @@ define(function(require, exports, module) {
      * @param [suppressEvent] {Boolean} When truthy, prevents the
      *   widget from emitting the 'select' event.
      */
-    ToggleButton.prototype.select = function select(suppressEvent) {
+    select(suppressEvent) {
         this.selected = true;
         this.arbiter.show(this.onSurface, this.options.inTransition);
 //        this.arbiter.setMode(ToggleButton.ON, this.options.inTransition);
         if (!suppressEvent) {
             this._eventOutput.emit('select');
         }
-    };
+    }
 
     /**
      * Transition towards the 'off' state and dispatch an event to
@@ -93,13 +97,13 @@ define(function(require, exports, module) {
      * @param [suppressEvent] {Boolean} When truthy, prevents the
      *   widget from emitting the 'deselect' event.
      */
-    ToggleButton.prototype.deselect = function deselect(suppressEvent) {
+    deselect(suppressEvent) {
         this.selected = false;
         this.arbiter.show(this.offSurface, this.options.outTransition);
         if (!suppressEvent) {
             this._eventOutput.emit('deselect');
         }
-    };
+    }
 
     /**
      * Return the state of the button
@@ -108,9 +112,9 @@ define(function(require, exports, module) {
      *
      * @return {boolean} selected state
      */
-    ToggleButton.prototype.isSelected = function isSelected() {
+    isSelected() {
         return this.selected;
-    };
+    }
 
     /**
      * Override the current options
@@ -119,7 +123,7 @@ define(function(require, exports, module) {
      *
      * @param {object} options JSON
      */
-    ToggleButton.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         if (options.content !== undefined) {
             if (!(options.content instanceof Array))
                 options.content = [options.content, options.content];
@@ -147,7 +151,7 @@ define(function(require, exports, module) {
             this.options.crossfade = options.crossfade;
             this.arbiter.setOptions({overlap: this.options.crossfade});
         }
-    };
+    }
 
     /**
      * Return the size defined in the options object
@@ -156,9 +160,9 @@ define(function(require, exports, module) {
      *
      * @return {array} two element array [height, width]
      */
-    ToggleButton.prototype.getSize = function getSize() {
+    getSize() {
         return this.options.size;
-    };
+    }
 
     /**
      * Generate a render spec from the contents of this component.
@@ -167,9 +171,7 @@ define(function(require, exports, module) {
      * @method render
      * @return {number} Render spec for this component
      */
-    ToggleButton.prototype.render = function render() {
+    render() {
         return this.arbiter.render();
-    };
-
-    module.exports = ToggleButton;
-});
+    }
+}

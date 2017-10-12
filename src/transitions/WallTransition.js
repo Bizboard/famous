@@ -1,18 +1,21 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var PE = require('../physics/PhysicsEngine');
-    var Particle = require('../physics/bodies/Particle');
-    var Spring = require('../physics/forces/Spring');
-    var Wall = require('../physics/constraints/Wall');
-    var Vector = require('../math/Vector');
+
+import PE from '../physics/PhysicsEngine.js';
+import Particle from '../physics/bodies/Particle.js';
+import Spring from '../physics/forces/Spring.js';
+import Wall from '../physics/constraints/Wall.js';
+import Vector from '../math/Vector.js';
+
+export default class WallTransition {
 
     /**
      * WallTransition is a method of transitioning between two values (numbers,
@@ -25,7 +28,7 @@ define(function(require, exports, module) {
      *
      * @param {Number|Array} [state=0] Initial state
      */
-    function WallTransition(state) {
+    constructor(state) {
         state = state || 0;
 
         this.endState  = new Vector(state);
@@ -46,7 +49,7 @@ define(function(require, exports, module) {
         this.PE.attach([this.wall, this.spring], this.particle);
     }
 
-    WallTransition.SUPPORTS_MULTIPLE = 3;
+    static SUPPORTS_MULTIPLE = 3;
 
     /**
      * @property WallTransition.DEFAULT_OPTIONS
@@ -54,7 +57,7 @@ define(function(require, exports, module) {
      * @protected
      * @static
      */
-    WallTransition.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
 
         /**
          * The amount of time in milliseconds taken for one complete oscillation
@@ -98,26 +101,26 @@ define(function(require, exports, module) {
         restitution : 0.5
     };
 
-    function _getEnergy() {
+    _getEnergy() {
         return this.particle.getEnergy() + this.spring.getEnergy([this.particle]);
     }
 
-    function _setAbsoluteRestTolerance() {
+    _setAbsoluteRestTolerance() {
         var distance = this.endState.sub(this.initState).normSquared();
         this._absRestTolerance = (distance === 0)
             ? this._restTolerance
             : this._restTolerance * distance;
     }
 
-    function _wake() {
+    _wake() {
         this.PE.wake();
     }
 
-    function _sleep() {
+    _sleep() {
         this.PE.sleep();
     }
 
-    function _setTarget(target) {
+    _setTarget(target) {
         this.endState.set(target);
 
         var dist = this.endState.sub(this.initState).norm();
@@ -129,34 +132,34 @@ define(function(require, exports, module) {
                 : this.endState.sub(this.initState).normalize(-1)
         });
 
-        _setAbsoluteRestTolerance.call(this);
+        this._setAbsoluteRestTolerance();
     }
 
-    function _setParticlePosition(p) {
+    _setParticlePosition(p) {
         this.particle.position.set(p);
     }
 
-    function _setParticleVelocity(v) {
+    _setParticleVelocity(v) {
         this.particle.velocity.set(v);
     }
 
-    function _getParticlePosition() {
+    _getParticlePosition() {
         return (this._dimensions === 0)
             ? this.particle.getPosition1D()
             : this.particle.getPosition();
     }
 
-    function _getParticleVelocity() {
+    _getParticleVelocity() {
         return (this._dimensions === 0)
             ? this.particle.getVelocity1D()
             : this.particle.getVelocity();
     }
 
-    function _setCallback(callback) {
+    _setCallback(callback) {
         this._callback = callback;
     }
 
-    function _update() {
+    _update() {
         if (this.PE.isSleeping()) {
             if (this._callback) {
                 var cb = this._callback;
@@ -165,15 +168,15 @@ define(function(require, exports, module) {
             }
             return;
         }
-        var energy = _getEnergy.call(this);
+        var energy = this._getEnergy();
         if (energy < this._absRestTolerance) {
-            _sleep.call(this);
-            _setParticlePosition.call(this, this.endState);
-            _setParticleVelocity.call(this, [0,0,0]);
+            this._sleep();
+            this._setParticlePosition(this.endState);
+            this._setParticleVelocity([0,0,0]);
         }
     }
 
-    function _setupDefinition(def) {
+    _setupDefinition(def) {
         var defaults = WallTransition.DEFAULT_OPTIONS;
         if (def.period === undefined) def.period = defaults.period;
         if (def.dampingRatio === undefined) def.dampingRatio = defaults.dampingRatio;
@@ -196,7 +199,7 @@ define(function(require, exports, module) {
         });
 
         //setup particle
-        _setParticleVelocity.call(this, def.velocity);
+        this._setParticleVelocity(def.velocity);
     }
 
     /**
@@ -207,17 +210,17 @@ define(function(require, exports, module) {
      * @param {Number|Array}  state     State
      * @param  {Number|Array} [velocity] Velocity
      */
-    WallTransition.prototype.reset = function reset(state, velocity) {
+    reset(state, velocity) {
         this._dimensions = (state instanceof Array)
             ? state.length
             : 0;
 
         this.initState.set(state);
-        _setParticlePosition.call(this, state);
-        if (velocity) _setParticleVelocity.call(this, velocity);
-        _setTarget.call(this, state);
-        _setCallback.call(this, undefined);
-    };
+        this._setParticlePosition(state);
+        if (velocity) this._setParticleVelocity(velocity);
+        this._setTarget(state);
+        this._setCallback(undefined);
+    }
 
     /**
      * Getter for velocity
@@ -226,9 +229,9 @@ define(function(require, exports, module) {
      *
      * @return velocity {Number|Array}
      */
-    WallTransition.prototype.getVelocity = function getVelocity() {
-        return _getParticleVelocity.call(this);
-    };
+    getVelocity() {
+        return this._getParticleVelocity();
+    }
 
     /**
      * Setter for velocity
@@ -237,9 +240,9 @@ define(function(require, exports, module) {
      *
      * @return velocity {Number|Array}
      */
-    WallTransition.prototype.setVelocity = function setVelocity(velocity) {
-        this.call(this, _setParticleVelocity(velocity));
-    };
+    setVelocity(velocity) {
+        this._setParticleVelocity(velocity);
+    }
 
     /**
      * Detects whether a transition is in progress
@@ -248,18 +251,18 @@ define(function(require, exports, module) {
      *
      * @return {Boolean}
      */
-    WallTransition.prototype.isActive = function isActive() {
+    isActive() {
         return !this.PE.isSleeping();
-    };
+    }
 
     /**
      * Halt the transition
      *
      * @method halt
      */
-    WallTransition.prototype.halt = function halt() {
+    halt() {
         this.set(this.get());
-    };
+    }
 
     /**
      * Getter
@@ -268,10 +271,10 @@ define(function(require, exports, module) {
      *
      * @return state {Number|Array}
      */
-    WallTransition.prototype.get = function get() {
-        _update.call(this);
-        return _getParticlePosition.call(this);
-    };
+    get() {
+        this._update();
+        return this._getParticlePosition();
+    }
 
     /**
      * Set the end position and transition, with optional callback on completion.
@@ -282,7 +285,7 @@ define(function(require, exports, module) {
      * @param [definition] {Object}     Transition definition
      * @param [callback] {Function}     Callback
      */
-    WallTransition.prototype.set = function set(state, definition, callback) {
+    set(state, definition, callback) {
         if (!definition) {
             this.reset(state);
             if (callback) callback();
@@ -293,11 +296,9 @@ define(function(require, exports, module) {
             ? state.length
             : 0;
 
-        _wake.call(this);
-        _setupDefinition.call(this, definition);
-        _setTarget.call(this, state);
-        _setCallback.call(this, callback);
-    };
-
-    module.exports = WallTransition;
-});
+        this._wake();
+        this._setupDefinition(definition);
+        this._setTarget(state);
+        this._setCallback(callback);
+    }
+}

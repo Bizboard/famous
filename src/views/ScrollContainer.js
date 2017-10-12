@@ -1,19 +1,20 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: felix@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var ContainerSurface = require('../surfaces/ContainerSurface');
-    var EventHandler = require('../core/EventHandler');
-    var Scrollview = require('./Scrollview');
-    var Utility = require('../utilities/Utility');
-    var OptionsManager = require('../core/OptionsManager');
+import ContainerSurface from '../surfaces/ContainerSurface.js';
+import EventHandler from '../core/EventHandler.js';
+import Scrollview from './Scrollview.js';
+import Utility from '../utilities/Utility.js';
+import OptionsManager from '../core/OptionsManager.js';
 
+export default class ScrollContainer {
     /**
      * A Container surface with a scrollview automatically added. The convenience of ScrollContainer lies in
      * being able to clip out portions of the associated scrollview that lie outside the bounding surface,
@@ -25,7 +26,7 @@ define(function(require, exports, module) {
      * @param {Options} [options.container=undefined] Options for the ScrollContainer instance's surface.
      * @param {Options} [options.scrollview={direction:Utility.Direction.X}]  Options for the ScrollContainer instance's scrollview.
      */
-    function ScrollContainer(options) {
+    constructor(options) {
         this.options = Object.create(ScrollContainer.DEFAULT_OPTIONS);
         this._optionsManager = new OptionsManager(this.options);
 
@@ -48,12 +49,13 @@ define(function(require, exports, module) {
         this.scrollview.pipe(this._eventOutput);
     }
 
-    ScrollContainer.DEFAULT_OPTIONS = {
+
+    static DEFAULT_OPTIONS = {
         container: {
             properties: {overflow : 'hidden'}
         },
         scrollview: {}
-    };
+    }
 
     /**
      * Patches the ScrollContainer instance's options with the passed-in ones.
@@ -61,9 +63,9 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param {Options} options An object of configurable options for the ScrollContainer instance.
      */
-    ScrollContainer.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         return this._optionsManager.setOptions(options);
-    };
+    }
 
     /**
      * Sets the collection of renderables under the ScrollContainer instance scrollview's control.
@@ -71,9 +73,9 @@ define(function(require, exports, module) {
      * @method sequenceFrom
      * @param {Array|ViewSequence} sequence Either an array of renderables or a Famous ViewSequence.
      */
-    ScrollContainer.prototype.sequenceFrom = function sequenceFrom() {
+    sequenceFrom() {
         return this.scrollview.sequenceFrom.apply(this.scrollview, arguments);
-    };
+    }
 
     /**
      * Returns the width and the height of the ScrollContainer instance.
@@ -81,9 +83,9 @@ define(function(require, exports, module) {
      * @method getSize
      * @return {Array} A two value array of the ScrollContainer instance's current width and height (in that order).
      */
-    ScrollContainer.prototype.getSize = function getSize() {
+    getSize() {
         return this.container.getSize.apply(this.container, arguments);
-    };
+    }
 
     /**
      * Generate a render spec from the contents of this component.
@@ -92,9 +94,7 @@ define(function(require, exports, module) {
      * @method render
      * @return {number} Render spec for this component
      */
-    ScrollContainer.prototype.render = function render() {
+    render() {
         return this.container.render();
-    };
-
-    module.exports = ScrollContainer;
-});
+    }
+}

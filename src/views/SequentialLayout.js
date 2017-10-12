@@ -1,19 +1,19 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: felix@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
+import OptionsManager from '../core/OptionsManager.js';
+import Entity from '../core/Entity.js';
+import Transform from '../core/Transform.js';
+import ViewSequence from '../core/ViewSequence.js';
+import Utility from '../utilities/Utility.js';
 
-define(function(require, exports, module) {
-    var OptionsManager = require('../core/OptionsManager');
-    var Entity = require('../core/Entity');
-    var Transform = require('../core/Transform');
-    var ViewSequence = require('../core/ViewSequence');
-    var Utility = require('../utilities/Utility');
-
+export default class SequentialLayout {
     /**
      * SequentialLayout will lay out a collection of renderables sequentially in the specified direction.
      * @class SequentialLayout
@@ -24,7 +24,7 @@ define(function(require, exports, module) {
      * (x) or vertically (y). Utility's direction is essentially either zero (X) or one (Y), so feel free
      * to just use integers as well.
      */
-    function SequentialLayout(options) {
+    constructor(options) {
         this._items = null;
         this._size = null;
         this._outputFunction = SequentialLayout.DEFAULT_OUTPUT_FUNCTION;
@@ -38,19 +38,19 @@ define(function(require, exports, module) {
         if (options) this.setOptions(options);
     }
 
-    SequentialLayout.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
         direction: Utility.Direction.Y,
         itemSpacing: 0
-    };
+    }
 
-    SequentialLayout.DEFAULT_OUTPUT_FUNCTION = function DEFAULT_OUTPUT_FUNCTION(input, offset, index) {
-        var transform = (this.options.direction === Utility.Direction.X) ? Transform.translate(offset, 0) : Transform.translate(0, offset);
+    static DEFAULT_OUTPUT_FUNCTION(input, offset, index) {
+        let transform = (this.options.direction === Utility.Direction.X) ? Transform.translate(offset, 0) : Transform.translate(0, offset);
         return {
             size: this.cachedSize,
             transform: transform,
             target: input.render()
         };
-    };
+    }
 
     /**
      * Returns the width and the height of the SequentialLayout instance.
@@ -58,10 +58,10 @@ define(function(require, exports, module) {
      * @method getSize
      * @return {Array} A two value array of the SequentialLayout instance's current width and height (in that order).
      */
-    SequentialLayout.prototype.getSize = function getSize() {
+    function getSize() {
         if (!this._size) this.render(); // hack size in
         return this._size;
-    };
+    }
 
     /**
      * Sets the collection of renderables under the SequentialLayout instance's control.
@@ -70,11 +70,11 @@ define(function(require, exports, module) {
      * @param {Array|ViewSequence} items Either an array of renderables or a Famous viewSequence.
      * @chainable
      */
-    SequentialLayout.prototype.sequenceFrom = function sequenceFrom(items) {
+    sequenceFrom(items) {
         if (items instanceof Array) items = new ViewSequence(items);
         this._items = items;
         return this;
-    };
+    }
 
     /**
      * Patches the SequentialLayout instance's options with the passed-in ones.
@@ -83,10 +83,10 @@ define(function(require, exports, module) {
      * @param {Options} options An object of configurable options for the SequentialLayout instance.
      * @chainable
      */
-    SequentialLayout.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         this.optionsManager.setOptions.apply(this.optionsManager, arguments);
         return this;
-    };
+    }
 
     /**
      * setOutputFunction is used to apply a user-defined output transform on each processed renderable.
@@ -97,10 +97,10 @@ define(function(require, exports, module) {
      * instance.
      * @chainable
      */
-    SequentialLayout.prototype.setOutputFunction = function setOutputFunction(outputFunction) {
+    setOutputFunction(outputFunction) {
         this._outputFunction = outputFunction;
         return this;
-    };
+    }
 
     /**
      * Return the id of the component
@@ -109,9 +109,9 @@ define(function(require, exports, module) {
      * @method render
      * @return {number} id of the SequentialLayout
      */
-    SequentialLayout.prototype.render = function render() {
+    render() {
         return this.id;
-    };
+    }
 
     /**
      * Generate a render spec from the contents of this component.
@@ -121,15 +121,15 @@ define(function(require, exports, module) {
      * @param {Object} parentSpec parent render spec
      * @return {Object} Render spec for this component
      */
-    SequentialLayout.prototype.commit = function commit(parentSpec) {
-        var length             = 0;
-        var secondaryDirection = this.options.direction ^ 1;
-        var currentNode        = this._items;
-        var item               = null;
-        var itemSize           = [];
-        var output             = {};
-        var result             = [];
-        var i                  = 0;
+    commit(parentSpec) {
+        let length             = 0;
+        let secondaryDirection = this.options.direction ^ 1;
+        let currentNode        = this._items;
+        let item               = null;
+        let itemSize           = [];
+        let output             = {};
+        let result             = [];
+        let i                  = 0;
 
         this._size = [0, 0];
         this.cachedSize = parentSpec.size;
@@ -163,7 +163,5 @@ define(function(require, exports, module) {
             size: this.getSize(),
             target: result
         };
-    };
-
-    module.exports = SequentialLayout;
-});
+    }
+}

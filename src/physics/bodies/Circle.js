@@ -1,15 +1,17 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Body = require('./Body');
-    var Matrix = require('../../math/Matrix');
+import Body from './Body.js';
+import Matrix from '../../math/Matrix.js';
+
+export default class Circle extends Body {
 
     /**
      * Implements a circle, or spherical, geometry for a Body with
@@ -19,27 +21,24 @@ define(function(require, exports, module) {
      * @extends Body
      * @constructor
      */
-    function Circle(options) {
-        options = options || {};
-        this.setRadius(options.radius || 0);
-        Body.call(this, options);
+    constructor(options) {
+      super(...arguments);
+      options = options || {};
+      this.setRadius(options.radius || 0);
     }
-
-    Circle.prototype = Object.create(Body.prototype);
-    Circle.prototype.constructor = Circle;
 
     /**
      * Basic setter for radius.
      * @method setRadius
      * @param r {Number} radius
      */
-    Circle.prototype.setRadius = function setRadius(r) {
+    setRadius(r) {
         this.radius = r;
         this.size = [2*this.radius, 2*this.radius];
         this.setMomentsOfInertia();
-    };
+    }
 
-    Circle.prototype.setMomentsOfInertia = function setMomentsOfInertia() {
+    setMomentsOfInertia() {
         var m = this.mass;
         var r = this.radius;
 
@@ -54,8 +53,5 @@ define(function(require, exports, module) {
             [0, 4 / (m * r * r), 0],
             [0, 0, 2 / (m * r * r)]
         ]);
-    };
-
-    module.exports = Circle;
-
-});
+    }
+}

@@ -1,15 +1,23 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Surface = require('../core/Surface');
-    var staticInherits = require('../utilities/StaticInherit.js').staticInherits;
+import Surface from '../core/Surface.js';
+
+export default class VideoSurface extends Surface {
+
+  elementType = 'video';
+  elementClass = 'famous-surface';
+
+  static DEFAULT_OPTIONS = {
+      autoplay: false
+  }
 
   /**
      * Creates a famous surface containing video content. Currently adding
@@ -28,22 +36,12 @@ define(function(require, exports, module) {
      * @param {String} [options.src] videoUrl URL
      * @param {boolean} [options.autoplay] autoplay
      */
-    function VideoSurface(options) {
-        Surface.apply(this, arguments);
+    constructor(options) {
+        super(...arguments);
         this._videoUrl = undefined;
         this.options = Object.create(VideoSurface.DEFAULT_OPTIONS);
         if (options) this.setOptions(options);
     }
-
-    staticInherits(VideoSurface, Surface);
-    VideoSurface.prototype.constructor = VideoSurface;
-
-    VideoSurface.DEFAULT_OPTIONS = {
-        autoplay: false
-    };
-
-    VideoSurface.prototype.elementType = 'video';
-    VideoSurface.prototype.elementClass = 'famous-surface';
 
     /**
      * Set internal options, overriding any default options
@@ -53,7 +51,7 @@ define(function(require, exports, module) {
      * @param {Object} [options] overrides of default options
      * @param {Boolean} [options.autoplay] HTML autoplay
      */
-    VideoSurface.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         if (options.size) this.setSize(options.size);
         if (options.classes) this.setClasses(options.classes);
         if (options.properties) this.setProperties(options.properties);
@@ -62,7 +60,7 @@ define(function(require, exports, module) {
             this._videoUrl = options.src;
             this._contentDirty = true;
         }
-    };
+    }
 
     /**
      * Set url of the video.
@@ -70,10 +68,10 @@ define(function(require, exports, module) {
      * @method setContent
      * @param {string} videoUrl URL
      */
-    VideoSurface.prototype.setContent = function setContent(videoUrl) {
+    setContent(videoUrl) {
         this._videoUrl = videoUrl;
         this._contentDirty = true;
-    };
+    }
 
     /**
      * Place the document element this component manages into the document.
@@ -83,10 +81,10 @@ define(function(require, exports, module) {
      * @method deploy
      * @param {Node} target document parent of this container
      */
-    VideoSurface.prototype.deploy = function deploy(target) {
+    deploy(target) {
         target.src = this._videoUrl;
         target.autoplay = this.options.autoplay;
-    };
+    }
 
     /**
      * Remove this component and contained content from the document.
@@ -97,9 +95,7 @@ define(function(require, exports, module) {
      *
      * @param {Node} target node to which the component was deployed
      */
-    VideoSurface.prototype.recall = function recall(target) {
+    recall(target) {
         target.src = '';
-    };
-
-    module.exports = VideoSurface;
-});
+    }
+}

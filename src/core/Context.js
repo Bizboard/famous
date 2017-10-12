@@ -1,49 +1,51 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function (require, exports, module) {
-  var RenderNode = require('./RenderNode');
-  var EventHandler = require('./EventHandler');
-  var ElementAllocator = require('./ElementAllocator');
-  var Transform = require('./Transform');
-  var Transitionable = require('../transitions/Transitionable');
+import RenderNode       from './RenderNode.js';
+import EventHandler     from './EventHandler.js';
+import ElementAllocator from './ElementAllocator.js';
+import Transform        from './Transform.js';
+import Transitionable   from '../transitions/Transitionable.js';
+import DOMBuffer        from './DOMBuffer.js';
 
-  var _zeroZero = [0, 0];
-  var usePrefix = typeof document !== 'undefined' && !('perspective' in document.documentElement.style);
+
+/**
+ * A context is a group of renderables, representing one hierarchy level in the DOM.
+ * Every Famous app has at least one context, which is the root context. The engine
+ * can have multiple contexts, and Groups will create new contexts to nest things further.
+ * The Context is not strictly bound to a specific point in the DOM, unless setPermanentElementAllocator()
+ * is called. Otherwise, the context can be rendered dynamically in different parts of the document.
+ *
+ * @class Context
+ * @constructor
+ * @private
+ * @param {Node} container Element in which content will be inserted
+ */
+export default class Context {
+
+  static _zeroZero = [0, 0];
+  static usePrefix = typeof document !== 'undefined' && !('perspective' in document.documentElement.style);
+  static perspectiveStyle = usePrefix?'webkitPerspective':'perspective';
 
   //TODO this function is quite ugly as it depends on the last state of _nodeContext
-  function _getElementSize() {
-    var allocator = this._permanentAllocator || this._nodeContext.allocator;
-    var element = allocator.container;
+  _getElementSize() {
+    let allocator = this._permanentAllocator || this._nodeContext.allocator;
+    let element = allocator.container;
     return [element.clientWidth, element.clientHeight];
   }
 
-  var _setPerspective = usePrefix ? function (element, perspective) {
-      element.style.webkitPerspective = perspective ? perspective.toFixed() + 'px' : '';
-    } : function (element, perspective) {
-      element.style.perspective = perspective ? perspective.toFixed() + 'px' : '';
-    };
+  _setPerspective(element, perspective) {
+    DOMBuffer.assignProperty(element.style, perspectiveStyle, perspective ? perspective.toFixed() + 'px' : '');
+  }
 
-  /**
-   * A context is a group of renderables, representing one hierarchy level in the DOM.
-   * Every Famous app has at least one context, which is the root context. The engine
-   * can have multiple contexts, and Groups will create new contexts to nest things further.
-   * The Context is not strictly bound to a specific point in the DOM, unless setPermanentElementAllocator()
-   * is called. Otherwise, the context can be rendered dynamically in different parts of the document.
-   *
-   * @class Context
-   * @constructor
-   * @private
-   * @param {Node} container Element in which content will be inserted
-   */
-  function Context() {
-
+  constructor() {
     this._node = new RenderNode();
     this._eventOutput = new EventHandler();
     this._size = [0, 0];
@@ -59,10 +61,9 @@ define(function (require, exports, module) {
       size: this._size
     };
 
-    this._eventOutput.on('resize', function () {
-      this.setSize(_getElementSize.call(this));
-    }.bind(this));
-
+    this._eventOutput.on('resize', () => {
+      this.setSize(this._getElementSize());
+    });
   }
 
 
@@ -74,9 +75,9 @@ define(function (require, exports, module) {
    * @param {Object} obj renderable object
    * @return {RenderNode} RenderNode wrapping this object, if not already a RenderNode
    */
-  Context.prototype.add = function add(obj) {
+  add(obj) {
     return this._node.add(obj);
-  };
+  }
 
   /**
    * Move this Context to another containing document element.
@@ -85,16 +86,16 @@ define(function (require, exports, module) {
    *
    * @param {Node} container Element to which content will be migrated
    */
-  Context.prototype.migrate = function migrate(container) {
+  migrate(container) {
     throw new Error('not supported');
-  };
+  }
 
   /**
    *  Cleans up all the RenderNode
    */
-  Context.prototype.cleanup = function cleanup(allocator) {
+  cleanup(allocator) {
     this._node.cleanup(allocator);
-  };
+  }
 
   /**
    * Gets viewport size for Context.
@@ -103,9 +104,9 @@ define(function (require, exports, module) {
    *
    * @return {Array.Number} viewport size as [width, height]
    */
-  Context.prototype.getSize = function getSize() {
+  getSize() {
     return this._size;
-  };
+  }
 
   /**
    * Sets viewport size for Context.
@@ -114,23 +115,23 @@ define(function (require, exports, module) {
    *
    * @param {Array.Number} size [width, height].  If unspecified, use size of root document element.
    */
-  Context.prototype.setSize = function setSize(size) {
-    if (!size) size = _getElementSize.call(this);
+  setSize(size) {
+    if (!size) size = this._getElementSize();
     this._size[0] = size[0];
     this._size[1] = size[1];
-  };
+  }
 
   /**
    * Marks the context as having a stationary root being the given elementAllocator
    * @param elementAllocator
    */
-  Context.prototype.setPermanentElementAllocator = function update(elementAllocator) {
+  setPermanentElementAllocator(elementAllocator) {
     if (this._permanentAllocator) {
       throw new Error('Cannot reset the permament element allocator!');
     }
     this._permanentAllocator = elementAllocator;
     this._nodeContext.allocator = elementAllocator;
-  };
+  }
 
   /**
    * Commit this Context's content changes to the document.
@@ -139,7 +140,7 @@ define(function (require, exports, module) {
    * @method update
    * @param {Object} contextParameters engine commit specification
    */
-  Context.prototype.update = function update(contextParameters) {
+  update(contextParameters) {
     if (contextParameters) {
       if (contextParameters.transform) this._nodeContext.transform = contextParameters.transform;
       if (contextParameters.opacity) this._nodeContext.opacity = contextParameters.opacity;
@@ -169,9 +170,9 @@ define(function (require, exports, module) {
    * @method getPerspective
    * @return {Number} depth perspective in pixels
    */
-  Context.prototype.getPerspective = function getPerspective() {
+  getPerspective() {
     return this._perspectiveState.get();
-  };
+  }
 
   /**
    * Set current perspective of this context in pixels.
@@ -181,9 +182,9 @@ define(function (require, exports, module) {
    * @param {Object} [transition] Transitionable object for applying the change
    * @param {function(Object)} callback function called on completion of transition
    */
-  Context.prototype.setPerspective = function setPerspective(perspective, transition, callback) {
+  setPerspective(perspective, transition, callback) {
     return this._perspectiveState.set(perspective, transition, callback);
-  };
+  }
 
   /**
    * Trigger an event, sending to all downstream handlers
@@ -195,9 +196,9 @@ define(function (require, exports, module) {
    * @param {Object} event event data
    * @return {EventHandler} this
    */
-  Context.prototype.emit = function emit(type, event) {
+  emit(type, event) {
     return this._eventOutput.emit(type, event);
-  };
+  }
 
   /**
    * Bind a callback function to an event type handled by this object.
@@ -208,9 +209,9 @@ define(function (require, exports, module) {
    * @param {function(string, Object)} handler callback
    * @return {EventHandler} this
    */
-  Context.prototype.on = function on(type, handler) {
+  on(type, handler) {
     return this._eventOutput.on(type, handler);
-  };
+  }
 
   /**
    * Unbind an event by type and handler.
@@ -222,9 +223,9 @@ define(function (require, exports, module) {
    * @param {function} handler function object to remove
    * @return {EventHandler} internal event handler object (for chaining)
    */
-  Context.prototype.removeListener = function removeListener(type, handler) {
+  removeListener(type, handler) {
     return this._eventOutput.removeListener(type, handler);
-  };
+  }
 
   /**
    * Add event handler object to set of downstream handlers.
@@ -234,9 +235,9 @@ define(function (require, exports, module) {
    * @param {EventHandler} target event handler target object
    * @return {EventHandler} passed event handler
    */
-  Context.prototype.pipe = function pipe(target) {
+  pipe(target) {
     return this._eventOutput.pipe(target);
-  };
+  }
 
   /**
    * Remove handler object from set of downstream handlers.
@@ -247,9 +248,8 @@ define(function (require, exports, module) {
    * @param {EventHandler} target target handler object
    * @return {EventHandler} provided target
    */
-  Context.prototype.unpipe = function unpipe(target) {
+  unpipe(target) {
     return this._eventOutput.unpipe(target);
-  };
+  }
 
-  module.exports = Context;
-});
+}

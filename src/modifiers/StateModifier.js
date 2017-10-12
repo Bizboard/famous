@@ -1,17 +1,19 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Modifier = require('../core/Modifier');
-    var Transform = require('../core/Transform');
-    var Transitionable = require('../transitions/Transitionable');
-    var TransitionableTransform = require('../transitions/TransitionableTransform');
+ import Modifier from '../core/Modifier.js';
+ import Transform from '../core/Transform.js';
+ import Transitionable from '../transitions/Transitionable.js';
+ import TransitionableTransform from '../transitions/TransitionableTransform.js';
+
+export default class StateModifier {
 
     /**
      *  A collection of visual changes to be
@@ -32,7 +34,7 @@ define(function(require, exports, module) {
      * @param {Array.Number} [options.size] size to apply to descendants
      * @param {Array.Number} [options.propportions] proportions to apply to descendants
      */
-    function StateModifier(options) {
+    constructor(options) {
         this._transformState = new TransitionableTransform(Transform.identity);
         this._opacityState = new Transitionable(1);
         this._originState = new Transitionable([0, 0]);
@@ -77,10 +79,10 @@ define(function(require, exports, module) {
      * @param {Function} [callback] callback to call after transition completes
      * @return {StateModifier} this
      */
-    StateModifier.prototype.setTransform = function setTransform(transform, transition, callback) {
+    setTransform(transform, transition, callback) {
         this._transformState.set(transform, transition, callback);
         return this;
-    };
+    }
 
     /**
      * Set the opacity of this modifier, either statically or
@@ -95,10 +97,10 @@ define(function(require, exports, module) {
      * @param {Function} callback callback to call after transition completes
      * @return {StateModifier} this
      */
-    StateModifier.prototype.setOpacity = function setOpacity(opacity, transition, callback) {
+    setOpacity(opacity, transition, callback) {
         this._opacityState.set(opacity, transition, callback);
         return this;
-    };
+    }
 
     /**
      * Set the origin of this modifier, either statically or
@@ -113,7 +115,7 @@ define(function(require, exports, module) {
      * @param {Function} callback callback to call after transition completes
      * @return {StateModifier} this
      */
-    StateModifier.prototype.setOrigin = function setOrigin(origin, transition, callback) {
+    setOrigin(origin, transition, callback) {
         if (origin === null) {
             if (this._hasOrigin) {
                 this._modifier.originFrom(null);
@@ -127,7 +129,7 @@ define(function(require, exports, module) {
         }
         this._originState.set(origin, transition, callback);
         return this;
-    };
+    }
 
     /**
      * Set the alignment of this modifier, either statically or
@@ -142,7 +144,7 @@ define(function(require, exports, module) {
      * @param {Function} callback callback to call after transition completes
      * @return {StateModifier} this
      */
-    StateModifier.prototype.setAlign = function setOrigin(align, transition, callback) {
+    setOrigin(align, transition, callback) {
         if (align === null) {
             if (this._hasAlign) {
                 this._modifier.alignFrom(null);
@@ -156,7 +158,7 @@ define(function(require, exports, module) {
         }
         this._alignState.set(align, transition, callback);
         return this;
-    };
+    }
 
     /**
      * Set the size of this modifier, either statically or
@@ -171,7 +173,7 @@ define(function(require, exports, module) {
      * @param {Function} callback callback to call after transition completes
      * @return {StateModifier} this
      */
-    StateModifier.prototype.setSize = function setSize(size, transition, callback) {
+    setSize(size, transition, callback) {
         if (size === null) {
             if (this._hasSize) {
                 this._modifier.sizeFrom(null);
@@ -185,7 +187,7 @@ define(function(require, exports, module) {
         }
         this._sizeState.set(size, transition, callback);
         return this;
-    };
+    }
 
     /**
      * Set the proportions of this modifier, either statically or
@@ -198,7 +200,7 @@ define(function(require, exports, module) {
      * @param {Function} callback callback to call after transition completes
      * @return {StateModifier} this
      */
-    StateModifier.prototype.setProportions = function setSize(proportions, transition, callback) {
+    setProportions(proportions, transition, callback) {
         if (proportions === null) {
             if (this._hasProportions) {
                 this._modifier.proportionsFrom(null);
@@ -212,21 +214,21 @@ define(function(require, exports, module) {
         }
         this._proportionsState.set(proportions, transition, callback);
         return this;
-    };
+    }
 
     /**
      * Stop the transition.
      *
      * @method halt
      */
-    StateModifier.prototype.halt = function halt() {
+    halt() {
         this._transformState.halt();
         this._opacityState.halt();
         this._originState.halt();
         this._alignState.halt();
         this._sizeState.halt();
         this._proportionsState.halt();
-    };
+    }
 
     /**
      * Get the current state of the transform matrix component.
@@ -234,9 +236,9 @@ define(function(require, exports, module) {
      * @method getTransform
      * @return {Object} transform provider object
      */
-    StateModifier.prototype.getTransform = function getTransform() {
+    getTransform() {
         return this._transformState.get();
-    };
+    }
 
     /**
      * Get the destination state of the transform component.
@@ -244,9 +246,9 @@ define(function(require, exports, module) {
      * @method getFinalTransform
      * @return {Transform} transform matrix
      */
-    StateModifier.prototype.getFinalTransform = function getFinalTransform() {
+    getFinalTransform() {
         return this._transformState.getFinal();
-    };
+    }
 
     /**
      * Get the current state of the opacity component.
@@ -254,9 +256,9 @@ define(function(require, exports, module) {
      * @method getOpacity
      * @return {Object} opacity provider object
      */
-    StateModifier.prototype.getOpacity = function getOpacity() {
+    getOpacity() {
         return this._opacityState.get();
-    };
+    }
 
     /**
      * Get the current state of the origin component.
@@ -264,9 +266,9 @@ define(function(require, exports, module) {
      * @method getOrigin
      * @return {Object} origin provider object
      */
-    StateModifier.prototype.getOrigin = function getOrigin() {
+    getOrigin() {
         return this._hasOrigin ? this._originState.get() : null;
-    };
+    }
 
     /**
      * Get the current state of the align component.
@@ -274,9 +276,9 @@ define(function(require, exports, module) {
      * @method getAlign
      * @return {Object} align provider object
      */
-    StateModifier.prototype.getAlign = function getAlign() {
+    getAlign() {
         return this._hasAlign ? this._alignState.get() : null;
-    };
+    }
 
     /**
      * Get the current state of the size component.
@@ -284,9 +286,9 @@ define(function(require, exports, module) {
      * @method getSize
      * @return {Object} size provider object
      */
-    StateModifier.prototype.getSize = function getSize() {
+    getSize() {
         return this._hasSize ? this._sizeState.get() : null;
-    };
+    }
 
     /**
      * Get the current state of the propportions component.
@@ -294,9 +296,9 @@ define(function(require, exports, module) {
      * @method getProportions
      * @return {Object} size provider object
      */
-    StateModifier.prototype.getProportions = function getProportions() {
+    getProportions() {
         return this._hasProportions ? this._proportionsState.get() : null;
-    };
+    }
 
     /**
      * Return render spec for this StateModifier, applying to the provided
@@ -310,9 +312,7 @@ define(function(require, exports, module) {
      * @return {Object} render spec for this StateModifier, including the
      *    provided target
      */
-    StateModifier.prototype.modify = function modify(target) {
+    modify(target) {
         return this._modifier.modify(target);
-    };
-
-    module.exports = StateModifier;
-});
+    }
+}

@@ -1,15 +1,17 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Constraint = require('./Constraint');
-    var Vector = require('../../math/Vector');
+import Constraint from './Constraint.js';
+import Vector from '../../math/Vector.js';
+
+export default class Wall extends Constraint {
 
     /**
      *  A wall describes an infinite two-dimensional plane that physics bodies
@@ -41,19 +43,15 @@ define(function(require, exports, module) {
      *  @param {onContact} [options.onContact] How to handle collision against the wall.
      *
      */
-    function Wall(options) {
-        this.options = Object.create(Wall.DEFAULT_OPTIONS);
-        if (options) this.setOptions(options);
+    constructor(options) {
+      super(...arguments);
+      this.options = Object.create(Wall.DEFAULT_OPTIONS);
+      if (options) this.setOptions(options);
 
-        //registers
-        this.diff = new Vector();
-        this.impulse = new Vector();
-
-        Constraint.call(this);
+      //registers
+      this.diff = new Vector();
+      this.impulse = new Vector();
     }
-
-    Wall.prototype = Object.create(Constraint.prototype);
-    Wall.prototype.constructor = Wall;
 
     /**
      * @property Wall.ON_CONTACT
@@ -61,7 +59,7 @@ define(function(require, exports, module) {
      * @protected
      * @static
      */
-    Wall.ON_CONTACT = {
+    static ON_CONTACT = {
 
         /**
          * Physical bodies bounce off the wall
@@ -74,16 +72,16 @@ define(function(require, exports, module) {
          * @attribute SILENT
          */
         SILENT : 1
-    };
+    }
 
-    Wall.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
         restitution : 0.5,
         drift : 0.5,
         slop : 0,
         normal : [1, 0, 0],
         distance : 0,
         onContact : Wall.ON_CONTACT.REFLECT
-    };
+    }
 
     /*
      * Setter for options.
@@ -91,7 +89,7 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param options {Objects}
      */
-    Wall.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         if (options.normal !== undefined) {
             if (options.normal instanceof Vector) this.options.normal = options.normal.clone();
             if (options.normal instanceof Array)  this.options.normal = new Vector(options.normal);
@@ -101,40 +99,40 @@ define(function(require, exports, module) {
         if (options.slop !== undefined) this.options.slop = options.slop;
         if (options.distance !== undefined) this.options.distance = options.distance;
         if (options.onContact !== undefined) this.options.onContact = options.onContact;
-    };
+    }
 
-    function _getNormalVelocity(n, v) {
+    _getNormalVelocity(n, v) {
         return v.dot(n);
     }
 
-    function _getDistanceFromOrigin(p) {
-        var n = this.options.normal;
-        var d = this.options.distance;
+    _getDistanceFromOrigin(p) {
+        let n = this.options.normal;
+        let d = this.options.distance;
         return p.dot(n) + d;
     }
 
-    function _onEnter(particle, overlap, dt) {
-        var p = particle.position;
-        var v = particle.velocity;
-        var m = particle.mass;
-        var n = this.options.normal;
-        var action = this.options.onContact;
-        var restitution = this.options.restitution;
-        var impulse = this.impulse;
+    _onEnter(particle, overlap, dt) {
+        let p = particle.position;
+        let v = particle.velocity;
+        let m = particle.mass;
+        let n = this.options.normal;
+        let action = this.options.onContact;
+        let restitution = this.options.restitution;
+        let impulse = this.impulse;
 
-        var drift = this.options.drift;
-        var slop = -this.options.slop;
-        var gamma = 0;
+        let drift = this.options.drift;
+        let slop = -this.options.slop;
+        let gamma = 0;
 
         if (this._eventOutput) {
-            var data = {particle : particle, wall : this, overlap : overlap, normal : n};
+            let data = {particle : particle, wall : this, overlap : overlap, normal : n};
             this._eventOutput.emit('preCollision', data);
             this._eventOutput.emit('collision', data);
         }
 
         switch (action) {
             case Wall.ON_CONTACT.REFLECT:
-                var lambda = (overlap < slop)
+                let lambda = (overlap < slop)
                     ? -((1 + restitution) * n.dot(v) + drift / dt * (overlap - slop)) / (m * dt + gamma)
                     : -((1 + restitution) * n.dot(v)) / (m * dt + gamma);
 
@@ -147,10 +145,10 @@ define(function(require, exports, module) {
         if (this._eventOutput) this._eventOutput.emit('postCollision', data);
     }
 
-    function _onExit(particle, overlap, dt) {
-        var action = this.options.onContact;
-        var p = particle.position;
-        var n = this.options.normal;
+    _onExit(particle, overlap, dt) {
+        let action = this.options.onContact;
+        let p = particle.position;
+        let n = this.options.normal;
 
         if (action === Wall.ON_CONTACT.REFLECT) {
             particle.setPosition(p.add(n.mult(-overlap)));
@@ -165,24 +163,22 @@ define(function(require, exports, module) {
      * @param source {Body}         The source of the constraint
      * @param dt {Number}           Delta time
      */
-    Wall.prototype.applyConstraint = function applyConstraint(targets, source, dt) {
-        var n = this.options.normal;
+    applyConstraint(targets, source, dt) {
+        let n = this.options.normal;
 
-        for (var i = 0; i < targets.length; i++) {
-            var particle = targets[i];
-            var p = particle.position;
-            var v = particle.velocity;
-            var r = particle.radius || 0;
+        for (let i = 0; i < targets.length; i++) {
+            let particle = targets[i];
+            let p = particle.position;
+            let v = particle.velocity;
+            let r = particle.radius || 0;
 
-            var overlap = _getDistanceFromOrigin.call(this, p.add(n.mult(-r)));
-            var nv = _getNormalVelocity.call(this, n, v);
+            let overlap = this._getDistanceFromOrigin(p.add(n.mult(-r)));
+            let nv = this._getNormalVelocity(n, v);
 
             if (overlap <= 0) {
-                if (nv < 0) _onEnter.call(this, particle, overlap, dt);
-                else _onExit.call(this, particle, overlap, dt);
+                if (nv < 0) this._onEnter(particle, overlap, dt);
+                else this._onExit(particle, overlap, dt);
             }
         }
-    };
-
-    module.exports = Wall;
-});
+    }
+}

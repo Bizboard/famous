@@ -1,21 +1,22 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function (require, exports, module) {
+ /**
+  * EventEmitter represents a channel for events.
+  *
+  * @class EventEmitter
+  * @constructor
+  */
+export default class EventEmitter {
 
-  /**
-   * EventEmitter represents a channel for events.
-   *
-   * @class EventEmitter
-   * @constructor
-   */
-  function EventEmitter() {
+  constructor() {
     this.listeners = {};
     this._owner = this;
   }
@@ -33,40 +34,40 @@ define(function (require, exports, module) {
    * @param {Objects}(opt) event event data
    * @return {EventHandler} this
    */
-  EventEmitter.prototype.emit = function emit() {
-    var type = arguments[0];
-    var args = [];
-    for (var i = 1; i < arguments.length; i++) {
+   emit() {
+    let type = arguments[0];
+    let args = [];
+    for (let i = 1; i < arguments.length; i++) {
       args.push(arguments[i]);
     }
-    var handlers = this.listeners[type];
-    var suppressedHandlers = this.determineSurpressedTouchMoveEvents(type, handlers, args[0]);
+    let handlers = this.listeners[type];
+    let suppressedHandlers = this.determineSurpressedTouchMoveEvents(type, handlers, args[0]);
     if (handlers) {
-      for (var i = 0; i < handlers.length; i++) {
+      for (let i = 0; i < handlers.length; i++) {
         if (!suppressedHandlers[i]) {
           handlers[i].apply(this._owner, args);
         }
       }
     }
     return this;
-  };
+  }
 
 
-  EventEmitter.prototype.determineSurpressedTouchMoveEvents = function determineSurpressedTouchMoveEvents(eventType, handlers, event) {
+  determineSurpressedTouchMoveEvents(eventType, handlers, event) {
     /* If the number of touches is more than 2, then we should not surpress any events */
-    var numberOfHandlers = handlers ? handlers.length : 0;
+    let numberOfHandlers = handlers ? handlers.length : 0;
     if (numberOfHandlers < 2 || !(event instanceof window.TouchEvent) || event.touches.length > 1 || !['touchstart', 'touchmove', 'touchend'].includes(eventType)) {
       return new Array(numberOfHandlers).fill(false);
     }
 
     /* Plural of axis is axes */
-    var axes = handlers.map((handler) => handler._handlerOptions ? handler._handlerOptions.axis : undefined);
-    var firstAxis = axes[0];
+    let axes = handlers.map((handler) => handler._handlerOptions ? handler._handlerOptions.axis : undefined);
+    let firstAxis = axes[0];
     /* If all the axes are the same */
     if (axes.every((axis) => axis === firstAxis || axis === undefined)) {
       return new Array(numberOfHandlers).fill(false);
     }
-    var touch = event.touches[0];
+    let touch = event.touches[0];
 
     if (eventType === 'touchstart') {
       this._currentTouchMoveStartPosition = [touch.clientX, touch.clientY];
@@ -83,26 +84,26 @@ define(function (require, exports, module) {
 
     /* event type is touchmove. Analyze the touches and see if some events need to be surpressed */
 
-    var startPosition = this._currentTouchMoveStartPosition, currentMoveDirection = this._currentTouchMoveDirection;
+    let startPosition = this._currentTouchMoveStartPosition, currentMoveDirection = this._currentTouchMoveDirection;
 
     if (!startPosition && currentMoveDirection === undefined) {
       /* No information about start position, we can't ignore this one */
       return new Array(numberOfHandlers).fill(false);
     }
     if (currentMoveDirection === undefined) {
-      var xDiff = startPosition[0] - touch.clientX, yDiff = startPosition[1] - touch.clientY;
-      var absDiffs = [Math.abs(xDiff), Math.abs(yDiff)];
+      let xDiff = startPosition[0] - touch.clientX, yDiff = startPosition[1] - touch.clientY;
+      let absDiffs = [Math.abs(xDiff), Math.abs(yDiff)];
       this._currentTouchMoveDirection = currentMoveDirection = absDiffs.indexOf(Math.max.apply(null, absDiffs));
     }
 
-    var surpressArray = new Array(numberOfHandlers);
+    let surpressArray = new Array(numberOfHandlers);
 
-    for (var i = 0; i < numberOfHandlers; i++) {
+    for (let i = 0; i < numberOfHandlers; i++) {
       surpressArray[i] = axes[i] !== undefined && axes[i] !== currentMoveDirection;
     }
 
     return surpressArray;
-  };
+  }
 
   /**
    * Bind a callback function to an event type handled by this object.
@@ -114,14 +115,14 @@ define(function (require, exports, module) {
    * @param [options]
    * @return {EventHandler} this
    */
-  EventEmitter.prototype.on = function on(type, handler, options) {
+  on(type, handler, options) {
     if (!(type in this.listeners)) this.listeners[type] = [];
     /* Adds the options to the handler itself, in order to be able to pass to the DOMEventHandler.js */
     options && (handler._handlerOptions = options);
-    var index = this.listeners[type].indexOf(handler);
+    let index = this.listeners[type].indexOf(handler);
     if (index < 0) this.listeners[type].push(handler);
     return this;
-  };
+  }
 
   /**
    * Listens once
@@ -131,9 +132,9 @@ define(function (require, exports, module) {
    * @param {Boolean} options.propagate Whether we should listen for bubbled events
    * @returns {Mocked Promise}
    */
-  EventEmitter.prototype.once = function once(type, handler, options) {
-    var resolvers = [], resolveValue, isResolved = false;
-    var promise = {
+  once(type, handler, options) {
+    let resolvers = [], resolveValue, isResolved = false;
+    let promise = {
       then: function (resolveFunction) {
         if (isResolved) {
           resolveFunction(resolveValue)
@@ -147,19 +148,21 @@ define(function (require, exports, module) {
       handler && handler.apply(this._owner, arguments);
       resolveValue = arguments[0];
       isResolved = true;
-      for (var i = 0; i < resolvers.length; i++) {
+      for (let i = 0; i < resolvers.length; i++) {
         resolvers[i](resolveValue);
       }
     }, options);
 
     return promise;
-  };
+  }
 
   /**
    * Alias for "on".
    * @method addListener
    */
-  EventEmitter.prototype.addListener = EventEmitter.prototype.on;
+  addListener() {
+    this.on(...arguments);
+  }
 
   /**
    * Unbind an event by type and handler.
@@ -171,19 +174,19 @@ define(function (require, exports, module) {
    * @param {function} handler function object to remove
    * @return {EventEmitter} this
    */
-  EventEmitter.prototype.removeListener = function removeListener(type, handler) {
-    var listener = this.listeners[type];
+  removeListener(type, handler) {
+    let listener = this.listeners[type];
     if (listener !== undefined) {
-      var index = listener.indexOf(handler);
+      let index = listener.indexOf(handler);
       if (index >= 0) listener.splice(index, 1);
     }
     return this;
-  };
+  }
 
-  EventEmitter.prototype.replaceListeners = function replaceListeners(type, handler) {
+  replaceListeners(type, handler) {
     this.listeners[type] = [];
     return this.on(type, handler);
-  };
+  }
 
   /**
    * Call event handlers with this set to owner.
@@ -192,9 +195,7 @@ define(function (require, exports, module) {
    *
    * @param {Object} owner object this EventEmitter belongs to
    */
-  EventEmitter.prototype.bindThis = function bindThis(owner) {
+  bindThis(owner) {
     this._owner = owner;
-  };
-
-  module.exports = EventEmitter;
-});
+  }
+}

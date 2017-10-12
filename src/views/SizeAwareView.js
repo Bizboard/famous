@@ -1,17 +1,18 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: arkady@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var View      = require('../core/View');
-    var Entity    = require('../core/Entity');
-    var Transform = require('../core/Transform');
+import View from '../core/View.js';
+import Entity from '../core/Entity.js';
+import Transform from '../core/Transform.js';
 
+export default class SizeAwareView extends View {
     /*
      *  A View that keeps track of the parent's resize, passed down from the
      *  commit function. This can be anything higher in the render tree,
@@ -25,14 +26,11 @@ define(function(require, exports, module) {
      *
      *  @class SizeAwareView
      */
-    function SizeAwareView() {
-        View.apply(this, arguments);
+    constructor() {
+        super(...arguments);
         this._id = Entity.register(this);
         this._parentSize = []; //Store reference to parent size.
     }
-
-    SizeAwareView.prototype = Object.create(View.prototype);
-    SizeAwareView.prototype.constructor = SizeAwareView;
 
     /*
      * Commit the content change from this node to the document.
@@ -43,7 +41,7 @@ define(function(require, exports, module) {
      * @method commit
      * @param {Object} context
      */
-    SizeAwareView.prototype.commit = function commit(context) {
+    commit(context) {
         var transform = context.transform;
         var opacity = context.opacity;
         var origin = context.origin;
@@ -71,23 +69,21 @@ define(function(require, exports, module) {
             size: this._parentSize,
             target: this._node.render()
         };
-    };
+    }
 
     /*
      * Get view's parent size.
      * @method getSize
      */
-    SizeAwareView.prototype.getParentSize = function getParentSize() {
+    getParentSize() {
         return this._parentSize;
-    };
+    }
 
     /*
      * Actual rendering happens in commit.
      * @method render
      */
-    SizeAwareView.prototype.render = function render() {
+    render() {
         return this._id;
-    };
-
-    module.exports = SizeAwareView;
-});
+    }
+}

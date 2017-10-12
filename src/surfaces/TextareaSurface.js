@@ -1,15 +1,19 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Surface = require('../core/Surface');
-    var staticInherits = require('../utilities/StaticInherit.js').staticInherits;
+import Surface from '../core/Surface.js';
+
+export default class TextareaSurface extends Surface {
+
+  elementType = 'textarea';
+  elementClass = 'famous-surface';
 
   /**
      * A Famo.us surface in the form of an HTML textarea element.
@@ -26,22 +30,18 @@ define(function(require, exports, module) {
      * @param {number} [options.cols] number of columns in textarea
      * @param {number} [options.rows] number of rows in textarea
      */
-    function TextareaSurface(options) {
-        this._placeholder = options.placeholder || '';
-        this._value       = options.value || '';
-        this._name        = options.name || '';
-        this._wrap        = options.wrap || '';
-        this._cols        = options.cols || '';
-        this._rows        = options.rows || '';
+    constructor(options) {
+      super(...arguments);
 
-        Surface.apply(this, arguments);
-        this.on('click', this.focus.bind(this));
+      this._placeholder = options.placeholder || '';
+      this._value       = options.value || '';
+      this._name        = options.name || '';
+      this._wrap        = options.wrap || '';
+      this._cols        = options.cols || '';
+      this._rows        = options.rows || '';
+
+      this.on('click', this.focus);
     }
-    staticInherits(TextareaSurface, Surface);
-    TextareaSurface.prototype.constructor = TextareaSurface;
-
-    TextareaSurface.prototype.elementType = 'textarea';
-    TextareaSurface.prototype.elementClass = 'famous-surface';
 
     /**
      * Set placeholder text.  Note: Triggers a repaint.
@@ -50,11 +50,11 @@ define(function(require, exports, module) {
      * @param {string} str Value to set the placeholder to.
      * @return {TextareaSurface} this, allowing method chaining.
      */
-    TextareaSurface.prototype.setPlaceholder = function setPlaceholder(str) {
+    setPlaceholder(str) {
         this._placeholder = str;
         this._contentDirty = true;
         return this;
-    };
+    }
 
     /**
      * Focus on the current input, pulling up the keyboard on mobile.
@@ -62,10 +62,10 @@ define(function(require, exports, module) {
      * @method focus
      * @return {TextareaSurface} this, allowing method chaining.
      */
-    TextareaSurface.prototype.focus = function focus() {
+    focus() {
         if (this._currentTarget) this._currentTarget.focus();
         return this;
-    };
+    }
 
     /**
      * Blur the current input, hiding the keyboard on mobile.
@@ -73,10 +73,10 @@ define(function(require, exports, module) {
      * @method focus
      * @return {TextareaSurface} this, allowing method chaining.
      */
-    TextareaSurface.prototype.blur = function blur() {
+    blur() {
         if (this._currentTarget) this._currentTarget.blur();
         return this;
-    };
+    }
 
     /**
      * Set the value of textarea.
@@ -86,11 +86,11 @@ define(function(require, exports, module) {
      * @param {string} str Value to set the main textarea value to.
      * @return {TextareaSurface} this, allowing method chaining.
      */
-    TextareaSurface.prototype.setValue = function setValue(str) {
+    setValue(str) {
         this._value = str;
         this._contentDirty = true;
         return this;
-    };
+    }
 
     /**
      * Get the value of the inner content of the textarea (e.g. the entered text)
@@ -98,14 +98,14 @@ define(function(require, exports, module) {
      * @method getValue
      * @return {string} value of element
      */
-    TextareaSurface.prototype.getValue = function getValue() {
+    getValue() {
         if (this._currentTarget) {
             return this._currentTarget.value;
         }
         else {
             return this._value;
         }
-    };
+    }
 
     /**
      * Set the name attribute of the element.
@@ -115,11 +115,11 @@ define(function(require, exports, module) {
      * @param {string} str element name
      * @return {TextareaSurface} this, allowing method chaining.
      */
-    TextareaSurface.prototype.setName = function setName(str) {
+    setName(str) {
         this._name = str;
         this._contentDirty = true;
         return this;
-    };
+    }
 
     /**
      * Get the name attribute of the element.
@@ -127,9 +127,9 @@ define(function(require, exports, module) {
      * @method getName
      * @return {string} name of element
      */
-    TextareaSurface.prototype.getName = function getName() {
+    getName() {
         return this._name;
-    };
+    }
 
     /**
      * Set the wrap of textarea.
@@ -139,11 +139,11 @@ define(function(require, exports, module) {
      * @param {string} str wrap of the textarea surface (e.g. 'soft', 'hard')
      * @return {TextareaSurface} this, allowing method chaining.
      */
-    TextareaSurface.prototype.setWrap = function setWrap(str) {
+    setWrap(str) {
         this._wrap = str;
         this._contentDirty = true;
         return this;
-    };
+    }
 
     /**
      * Set the number of columns visible in the textarea.
@@ -154,11 +154,11 @@ define(function(require, exports, module) {
      * @param {number} num columns in textarea surface
      * @return {TextareaSurface} this, allowing method chaining.
      */
-    TextareaSurface.prototype.setColumns = function setColumns(num) {
+    setColumns(num) {
         this._cols = num;
         this._contentDirty = true;
         return this;
-    };
+    }
 
     /**
      * Set the number of rows visible in the textarea.
@@ -169,11 +169,11 @@ define(function(require, exports, module) {
      * @param {number} num rows in textarea surface
      * @return {TextareaSurface} this, allowing method chaining.
      */
-    TextareaSurface.prototype.setRows = function setRows(num) {
+    setRows(num) {
         this._rows = num;
         this._contentDirty = true;
         return this;
-    };
+    }
 
     /**
      * Place the document element this component manages into the document.
@@ -182,14 +182,12 @@ define(function(require, exports, module) {
      * @method deploy
      * @param {Node} target document parent of this container
      */
-    TextareaSurface.prototype.deploy = function deploy(target) {
+    deploy(target) {
         if (this._placeholder !== '') target.placeholder = this._placeholder;
         if (this._value !== '') target.value = this._value;
         if (this._name !== '') target.name = this._name;
         if (this._wrap !== '') target.wrap = this._wrap;
         if (this._cols !== '') target.cols = this._cols;
         if (this._rows !== '') target.rows = this._rows;
-    };
-
-    module.exports = TextareaSurface;
-});
+    }
+}

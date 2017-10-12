@@ -1,15 +1,17 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Force = require('./Force');
-    var Vector = require('../../math/Vector');
+import Force from './Force.js';
+import Vector from '../../math/Vector.js';
+
+export default class VectorField extends Force {
 
     /**
      *  A force that moves a physics body to a location with a spring motion.
@@ -20,8 +22,8 @@ define(function(require, exports, module) {
      *  @extends Force
      *  @param {Object} options options to set on drag
      */
-    function VectorField(options) {
-        Force.call(this);
+    constructor(options) {
+        super(...arguments);
 
         this.options = Object.create(VectorField.DEFAULT_OPTIONS);
         if (options) this.setOptions(options);
@@ -30,16 +32,13 @@ define(function(require, exports, module) {
         this.evaluation = new Vector();
     }
 
-    VectorField.prototype = Object.create(Force.prototype);
-    VectorField.prototype.constructor = VectorField;
-
     /**
      * @property Spring.FORCE_FUNCTIONS
      * @type Object
      * @protected
      * @static
      */
-    VectorField.FIELDS = {
+    static FIELDS = {
         /**
          * Constant force, e.g., gravity
          * @attribute CONSTANT
@@ -87,7 +86,7 @@ define(function(require, exports, module) {
         POINT_ATTRACTOR : function(v, options) {
             options.position.sub(v).put(this.evaluation);
         }
-    };
+    }
 
     /**
      * @property VectorField.DEFAULT_OPTIONS
@@ -95,7 +94,7 @@ define(function(require, exports, module) {
      * @protected
      * @static
      */
-    VectorField.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
 
         /**
          * The strength of the force
@@ -113,7 +112,7 @@ define(function(require, exports, module) {
          * @type Function
          */
         field : VectorField.FIELDS.CONSTANT
-    };
+    }
 
     /**
      * Basic options setter
@@ -121,17 +120,17 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param {Objects} options
      */
-    VectorField.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         if (options.strength !== undefined) this.options.strength = options.strength;
         if (options.direction !== undefined) this.options.direction = options.direction;
         if (options.field !== undefined) {
             this.options.field = options.field;
-            _setFieldOptions.call(this, this.options.field);
+            this._setFieldOptions(this.options.field);
         }
-    };
+    }
 
-    function _setFieldOptions(field) {
-        var FIELDS = VectorField.FIELDS;
+    _setFieldOptions(field) {
+        let FIELDS = VectorField.FIELDS;
 
         switch (field) {
             case FIELDS.CONSTANT:
@@ -151,13 +150,13 @@ define(function(require, exports, module) {
      * @method applyForce
      * @param targets {Array.body} Array of bodies to apply force to.
      */
-    VectorField.prototype.applyForce = function applyForce(targets) {
-        var force = this.force;
-        var strength = this.options.strength;
-        var field = this.options.field;
+    applyForce(targets) {
+        let force = this.force;
+        let strength = this.options.strength;
+        let field = this.options.field;
 
-        var i;
-        var target;
+        let i;
+        let target;
 
         for (i = 0; i < targets.length; i++) {
             target = targets[i];
@@ -167,14 +166,14 @@ define(function(require, exports, module) {
         }
     };
 
-    VectorField.prototype.getEnergy = function getEnergy(targets) {
-        var field = this.options.field;
-        var FIELDS = VectorField.FIELDS;
+    getEnergy(targets) {
+        let field = this.options.field;
+        let FIELDS = VectorField.FIELDS;
 
-        var energy = 0;
+        let energy = 0;
 
-        var i;
-        var target;
+        let i;
+        let target;
         switch (field) {
             case FIELDS.CONSTANT:
                 energy = targets.length * this.options.direction.norm();
@@ -194,7 +193,5 @@ define(function(require, exports, module) {
         }
         energy *= this.options.strength;
         return energy;
-    };
-
-    module.exports = VectorField;
-});
+    }
+}

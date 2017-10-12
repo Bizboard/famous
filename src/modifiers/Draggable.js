@@ -1,28 +1,31 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-  var Transform = require('../core/Transform');
-  var Transitionable = require('../transitions/Transitionable');
-  var EventHandler = require('../core/EventHandler');
-  var Utilities = require('../math/Utilities');
+import Transform from '../core/Transform.js';
+import Transitionable from '../transitions/Transitionable.js';
+import EventHandler from '../core/EventHandler.js';
+import Utilities from '../math/Utilities.js';
 
-  var GenericSync = require('../inputs/GenericSync');
-  var MouseSync = require('../inputs/MouseSync');
-  var TouchSync = require('../inputs/TouchSync');
-  GenericSync.register({'mouse': MouseSync, 'touch': TouchSync});
+import GenericSync from '../inputs/GenericSync.js';
+import MouseSync from '../inputs/MouseSync.js';
+import TouchSync from '../inputs/TouchSync.js';
+
+GenericSync.register({'mouse': MouseSync, 'touch': TouchSync});
+
+export default class Draggable {
 
   //binary representation of directions for bitwise operations
-  var _direction = {
+  static _direction = {
     x : 0x01,         //001
     y : 0x02          //010
-  };
+  }
 
   /**
    * Makes added render nodes responsive to drag beahvior.
@@ -40,10 +43,10 @@ define(function(require, exports, module) {
    *    Draggable._direction.y to constrain to one axis.
    *
    */
-  function Draggable(options) {
+  constructor(options) {
     this.options = Object.create(Draggable.DEFAULT_OPTIONS);
     this.projection = this.getProjectionParameter(options);
-    var axis = this.getAxis();
+    let axis = this.getAxis();
     this.sync = new GenericSync('ontouchstart' in document.documentElement ? ['touch'] : ['mouse', 'touch'], {
       scale : this.options.scale,
       axis: axis
@@ -59,17 +62,13 @@ define(function(require, exports, module) {
     EventHandler.setInputHandler(this,  this.sync);
     EventHandler.setOutputHandler(this, this.eventOutput);
 
-    _bindEvents.call(this);
+    this._bindEvents();
   }
 
+  static DIRECTION_X = _direction.x;
+  static DIRECTION_Y = _direction.y;
 
-
-  Draggable.DIRECTION_X = _direction.x;
-  Draggable.DIRECTION_Y = _direction.y;
-
-  var _clamp = Utilities.clamp;
-
-  Draggable.DEFAULT_OPTIONS = {
+  static DEFAULT_OPTIONS = {
     projection  : _direction.x | _direction.y,
     scale       : 1,
     xRange      : null,
@@ -78,38 +77,38 @@ define(function(require, exports, module) {
     snapY       : 0,
     outsideTouches: true,
     transition  : {duration : 0}
-  };
+  }
 
-  function _mapDifferential(differential) {
-    var opts        = this.options;
-    var projection  = this.projection;
-    var snapX       = opts.snapX;
-    var snapY       = opts.snapY;
-    var rangeX      = opts.xRange;
-    var rangeY      = opts.yRange;
-    var outsideTouches = opts.outsideTouches;
-    var lastOffset  = this._lastTouchOffset;
+  _mapDifferential(differential) {
+    let opts        = this.options;
+    let projection  = this.projection;
+    let snapX       = opts.snapX;
+    let snapY       = opts.snapY;
+    let rangeX      = opts.xRange;
+    let rangeY      = opts.yRange;
+    let outsideTouches = opts.outsideTouches;
+    let lastOffset  = this._lastTouchOffset;
 
     //axes
-    var tx = (projection & _direction.x) ? differential[0] : 0;
-    var ty = (projection & _direction.y) ? differential[1] : 0;
+    let tx = (projection & _direction.x) ? differential[0] : 0;
+    let ty = (projection & _direction.y) ? differential[1] : 0;
 
     //snapping
     if (snapX > 0) tx -= tx % snapX;
     if (snapY > 0) ty -= ty % snapY;
 
     //ignore touches that happen outside of the xRange and yRange areas
-    var newPositionX = lastOffset[0] + tx;
+    let newPositionX = lastOffset[0] + tx;
     if(rangeX && !outsideTouches && (newPositionX > rangeX[1] || newPositionX < rangeX[0])) {
-      var overX = (newPositionX - rangeX[1]);
-      var underX = (newPositionX - rangeX[0]);
-      tx = _clamp(tx, [tx - underX, tx - overX]);
+      let overX = (newPositionX - rangeX[1]);
+      let underX = (newPositionX - rangeX[0]);
+      tx = Utilities.clamp(tx, [tx - underX, tx - overX]);
     }
-    var newPositionY = lastOffset[0] + ty;
+    let newPositionY = lastOffset[0] + ty;
     if(rangeY && !outsideTouches && (newPositionY > rangeY[1] || newPositionY < rangeY[0])) {
-      var overY = (newPositionY - rangeY[1]);
-      var underY = (newPositionY - rangeY[0]);
-      tx = _clamp(ty, [ty - underY, ty - overY]);
+      let overY = (newPositionY - rangeY[1]);
+      let underY = (newPositionY - rangeY[0]);
+      tx = Utilities.clamp(ty, [ty - underY, ty - overY]);
     }
 
     lastOffset[0] += tx;
@@ -118,25 +117,25 @@ define(function(require, exports, module) {
     return [tx, ty];
   }
 
-  function _handleStart() {
+  _handleStart() {
     if (!this._active) return;
     if (this._positionState.isActive()) this._positionState.halt();
     this._lastTouchOffset = [this.getPosition()[0], this.getPosition()[1]];
     this.eventOutput.emit('start', {position : this.getPosition()});
   }
 
-  function _handleMove(event) {
+  _handleMove(event) {
     if (!this._active) return;
 
-    var options = this.options;
+    let options = this.options;
     this._differential = event.position;
-    var newDifferential = _mapDifferential.call(this, this._differential);
+    let newDifferential = this._mapDifferential(this._differential);
 
     //buffer the differential if snapping is set
     this._differential[0] -= newDifferential[0];
     this._differential[1] -= newDifferential[1];
 
-    var pos = this.getPosition();
+    let pos = this.getPosition();
 
     //modify position, retain reference
     pos[0] += newDifferential[0];
@@ -144,27 +143,27 @@ define(function(require, exports, module) {
 
     //handle bounding box
     if (options.xRange){
-      var xRange = [options.xRange[0] + 0.5 * options.snapX, options.xRange[1] - 0.5 * options.snapX];
-      pos[0] = _clamp(pos[0], xRange);
+      let xRange = [options.xRange[0] + 0.5 * options.snapX, options.xRange[1] - 0.5 * options.snapX];
+      pos[0] = Utilities.clamp(pos[0], xRange);
     }
 
     if (options.yRange){
-      var yRange = [options.yRange[0] + 0.5 * options.snapY, options.yRange[1] - 0.5 * options.snapY];
-      pos[1] = _clamp(pos[1], yRange);
+      let yRange = [options.yRange[0] + 0.5 * options.snapY, options.yRange[1] - 0.5 * options.snapY];
+      pos[1] = Utilities.clamp(pos[1], yRange);
     }
 
     this.eventOutput.emit('update', {position : pos});
   }
 
-  function _handleEnd(data) {
+  _handleEnd(data) {
     if (!this._active) return;
     this.eventOutput.emit('end', {data: data, position : this.getPosition()});
   }
 
-  function _bindEvents() {
-    this.sync.on('start', _handleStart.bind(this));
-    this.sync.on('update', _handleMove.bind(this));
-    this.sync.on('end', _handleEnd.bind(this));
+  _bindEvents() {
+    this.sync.on('start', this._handleStart);
+    this.sync.on('update', this._handleMove);
+    this.sync.on('end', this._handleEnd);
   }
 
   /**
@@ -174,8 +173,8 @@ define(function(require, exports, module) {
    *
    * @param {Object} [options] overrides of default options.  See constructor.
    */
-  Draggable.prototype.setOptions = function setOptions(options) {
-    var currentOptions = this.options;
+  setOptions(options) {
+    let currentOptions = this.options;
     if (options.scale  !== undefined) {
       currentOptions.scale  = options.scale;
       this.sync.setOptions({
@@ -186,7 +185,7 @@ define(function(require, exports, module) {
     if (options.yRange !== undefined) currentOptions.yRange = options.yRange;
     if (options.snapX  !== undefined) currentOptions.snapX  = options.snapX;
     if (options.snapY  !== undefined) currentOptions.snapY  = options.snapY;
-  };
+  }
 
   /**
    * Get current delta in position from where this draggable started.
@@ -195,14 +194,14 @@ define(function(require, exports, module) {
    *
    * @return {array<number>} [x, y] position delta from start.
    */
-  Draggable.prototype.getPosition = function getPosition() {
+  getPosition() {
     return this._positionState.get();
-  };
+  }
 
-  Draggable.prototype.getProjectionParameter = function adjustProjectionParameter(options) {
+  getProjectionParameter(options) {
     if (options.projection !== undefined) {
-      var proj = options.projection || [];
-      var actualProjection = 0;
+      let proj = options.projection || [];
+      let actualProjection = 0;
       ['x', 'y'].forEach(function(val) {
         if (proj.indexOf(val) !== -1) actualProjection |= _direction[val];
       });
@@ -221,11 +220,11 @@ define(function(require, exports, module) {
    * @param {transition} transition transition object specifying how object moves to new position
    * @param {function} callback zero-argument function to call on observed completion
    */
-  Draggable.prototype.setRelativePosition = function setRelativePosition(position, transition, callback) {
-    var currPos = this.getPosition();
-    var relativePosition = [currPos[0] + position[0], currPos[1] + position[1]];
+  setRelativePosition(position, transition, callback) {
+    let currPos = this.getPosition();
+    let relativePosition = [currPos[0] + position[0], currPos[1] + position[1]];
     this.setPosition(relativePosition, transition, callback);
-  };
+  }
 
   /**
    * Transition the element to the desired absolute position via provided transition.
@@ -237,10 +236,10 @@ define(function(require, exports, module) {
    * @param {transition} transition transition object specifying how object moves to new position
    * @param {function} callback zero-argument function to call on observed completion
    */
-  Draggable.prototype.setPosition = function setPosition(position, transition, callback) {
+  setPosition(position, transition, callback) {
     if (this._positionState.isActive()) this._positionState.halt();
     this._positionState.set(position, transition, callback);
-  };
+  }
 
   /**
    * Set this draggable to respond to user input.
@@ -248,9 +247,9 @@ define(function(require, exports, module) {
    * @method activate
    *
    */
-  Draggable.prototype.activate = function activate() {
+  activate() {
     this._active = true;
-  };
+  }
 
   /**
    * Set this draggable to ignore user input.
@@ -258,9 +257,9 @@ define(function(require, exports, module) {
    * @method deactivate
    *
    */
-  Draggable.prototype.deactivate = function deactivate() {
+  deactivate() {
     this._active = false;
-  };
+  }
 
   /**
    * Switch the input response stage between active and inactive.
@@ -268,9 +267,9 @@ define(function(require, exports, module) {
    * @method toggle
    *
    */
-  Draggable.prototype.toggle = function toggle() {
+  toggle() {
     this._active = !this._active;
-  };
+  }
 
 
   /**
@@ -278,8 +277,8 @@ define(function(require, exports, module) {
    *
    * @returns {Number|undefined}
    */
-  Draggable.prototype.getAxis = function getAxis() {
-    var axis;
+  getAxis() {
+    let axis;
     if(this.projection === _direction.x){
       axis = 0;
     } else if(this.projection === _direction.y) {
@@ -299,13 +298,11 @@ define(function(require, exports, module) {
    * @return {Object} render spec for this Modifier, including the
    *    provided target
    */
-  Draggable.prototype.modify = function modify(target) {
-    var pos = this.getPosition();
+  modify(target) {
+    let pos = this.getPosition();
     return {
       transform: Transform.translate(pos[0], pos[1]),
       target: target
     };
   };
-
-  module.exports = Draggable;
-});
+}

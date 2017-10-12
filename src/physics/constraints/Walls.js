@@ -1,16 +1,19 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Constraint = require('./Constraint');
-    var Wall = require('./Wall');
-    var Vector = require('../../math/Vector');
+import Constraint from './Constraint.js';
+import Wall from './Wall.js';
+import Vector from '../../math/Vector.js';
+
+
+export default class Walls extends Constraint {
 
     /**
      *  Walls combines one or more Wall primitives and exposes a simple API to
@@ -30,23 +33,20 @@ define(function(require, exports, module) {
      *  @param {Array} [options.restitution] The energy ratio lost in a collision (0 = stick, 1 = elastic) The energy ratio lost in a collision (0 = stick, 1 = elastic)
      *  @param {Array} [options.onContact] How to handle collision against the wall.
      */
-    function Walls(options) {
-        this.options = Object.create(Walls.DEFAULT_OPTIONS);
-        if (options) this.setOptions(options);
-        _createComponents.call(this, options.sides || this.options.sides);
-
-        Constraint.call(this);
+    constructor(options) {
+      super(...arguments);
+      this.options = Object.create(Walls.DEFAULT_OPTIONS);
+      if (options) this.setOptions(options);
+      _createComponents.call(this, options.sides || this.options.sides);
     }
 
-    Walls.prototype = Object.create(Constraint.prototype);
-    Walls.prototype.constructor = Walls;
     /**
      * @property Walls.ON_CONTACT
      * @type Object
      * @extends Wall.ON_CONTACT
      * @static
      */
-    Walls.ON_CONTACT = Wall.ON_CONTACT;
+    static ON_CONTACT = Wall.ON_CONTACT;
 
     /**
      * An enumeration of common types of walls
@@ -58,7 +58,7 @@ define(function(require, exports, module) {
      * @final
      * @static
      */
-    Walls.SIDES = {
+    static SIDES = {
         LEFT   : 0,
         RIGHT  : 1,
         TOP    : 2,
@@ -67,9 +67,9 @@ define(function(require, exports, module) {
         BACK   : 5,
         TWO_DIMENSIONAL : [0, 1, 2, 3],
         THREE_DIMENSIONAL : [0, 1, 2, 3, 4, 5]
-    };
+    }
 
-    Walls.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
         sides : Walls.SIDES.TWO_DIMENSIONAL,
         size : [window.innerWidth, window.innerHeight, 0],
         origin : [.5, .5, .5],
@@ -77,7 +77,7 @@ define(function(require, exports, module) {
         slop : 0,
         restitution : 0.5,
         onContact : Walls.ON_CONTACT.REFLECT
-    };
+    }
 
     var _SIDE_NORMALS = {
         0 : new Vector(1, 0, 0),
@@ -89,8 +89,8 @@ define(function(require, exports, module) {
     };
 
     function _getDistance(side, size, origin) {
-        var distance;
-        var SIDES = Walls.SIDES;
+        let distance;
+        let SIDES = Walls.SIDES;
         switch (parseInt(side)) {
             case SIDES.LEFT:
                 distance = size[0] * origin[0];
@@ -120,8 +120,8 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param options {Objects}
      */
-    Walls.prototype.setOptions = function setOptions(options) {
-        var resizeFlag = false;
+    setOptions(options) {
+        let resizeFlag = false;
         if (options.restitution !== undefined) _setOptionsForEach.call(this, {restitution : options.restitution});
         if (options.drift !== undefined) _setOptionsForEach.call(this, {drift : options.drift});
         if (options.slop !== undefined) _setOptionsForEach.call(this, {slop : options.slop});
@@ -130,14 +130,14 @@ define(function(require, exports, module) {
         if (options.sides !== undefined) this.options.sides = options.sides;
         if (options.origin !== undefined) resizeFlag = true;
         if (resizeFlag) this.setSize(options.size, options.origin);
-    };
+    }
 
     function _createComponents(sides) {
         this.components = {};
-        var components = this.components;
+        let components = this.components;
 
-        for (var i = 0; i < sides.length; i++) {
-            var side = sides[i];
+        for (let i = 0; i < sides.length; i++) {
+            let side = sides[i];
             components[i] = new Wall({
                 normal   : _SIDE_NORMALS[side].clone(),
                 distance : _getDistance(side, this.options.size, this.options.origin)
@@ -151,24 +151,24 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param options {Objects}
      */
-    Walls.prototype.setSize = function setSize(size, origin) {
+    setSize(size, origin) {
         origin = origin || this.options.origin;
         if (origin.length < 3) origin[2] = 0.5;
 
         this.forEach(function(wall, side) {
-            var d = _getDistance(side, size, origin);
+            let d = _getDistance(side, size, origin);
             wall.setOptions({distance : d});
         });
 
         this.options.size   = size;
         this.options.origin = origin;
-    };
+    }
 
     function _setOptionsForEach(options) {
         this.forEach(function(wall) {
             wall.setOptions(options);
         });
-        for (var key in options) this.options[key] = options[key];
+        for (let key in options) this.options[key] = options[key];
     }
 
     /**
@@ -179,11 +179,11 @@ define(function(require, exports, module) {
      * @param source {Body}         The source of the constraint
      * @param dt {Number}           Delta time
      */
-    Walls.prototype.applyConstraint = function applyConstraint(targets, source, dt) {
+    applyConstraint(targets, source, dt) {
         this.forEach(function(wall) {
             wall.applyConstraint(targets, source, dt);
         });
-    };
+    }
 
     /**
      * Apply a method to each wall making up the walls
@@ -191,10 +191,10 @@ define(function(require, exports, module) {
      * @method applyConstraint
      * @param fn {Function}  Function that takes in a wall as its first parameter
      */
-    Walls.prototype.forEach = function forEach(fn) {
-        var sides = this.options.sides;
-        for (var key in this.sides) fn(sides[key], key);
-    };
+    forEach(fn) {
+        let sides = this.options.sides;
+        for (let key in this.sides) fn(sides[key], key);
+    }
 
     /**
      * Rotates the walls by an angle in the XY-plane
@@ -202,12 +202,12 @@ define(function(require, exports, module) {
      * @method applyConstraint
      * @param angle {Function}
      */
-    Walls.prototype.rotateZ = function rotateZ(angle) {
+    rotateZ(angle) {
         this.forEach(function(wall) {
-            var n = wall.options.normal;
+            let n = wall.options.normal;
             n.rotateZ(angle).put(n);
         });
-    };
+    }
 
     /**
      * Rotates the walls by an angle in the YZ-plane
@@ -215,12 +215,12 @@ define(function(require, exports, module) {
      * @method applyConstraint
      * @param angle {Function}
      */
-    Walls.prototype.rotateX = function rotateX(angle) {
+    rotateX(angle) {
         this.forEach(function(wall) {
-            var n = wall.options.normal;
+            let n = wall.options.normal;
             n.rotateX(angle).put(n);
         });
-    };
+    }
 
     /**
      * Rotates the walls by an angle in the XZ-plane
@@ -228,23 +228,21 @@ define(function(require, exports, module) {
      * @method applyConstraint
      * @param angle {Function}
      */
-    Walls.prototype.rotateY = function rotateY(angle) {
+    rotateY(angle) {
         this.forEach(function(wall) {
-            var n = wall.options.normal;
+            let n = wall.options.normal;
             n.rotateY(angle).put(n);
         });
-    };
+    }
 
     /**
      * Resets the walls to their starting oritentation
      */
-    Walls.prototype.reset = function reset() {
-        var sides = this.options.sides;
-        for (var i in sides) {
-            var component = this.components[i];
+    reset() {
+        let sides = this.options.sides;
+        for (let i in sides) {
+            let component = this.components[i];
             component.options.normal.set(_SIDE_NORMALS[i]);
         }
-    };
-
-    module.exports = Walls;
-});
+    }
+}

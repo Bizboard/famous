@@ -1,13 +1,14 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
+export default class ModifierChain {
 
     /**
      * A class to add and remove a chain of modifiers
@@ -16,7 +17,7 @@ define(function(require, exports, module) {
      * @class ModifierChain
      * @constructor
      */
-    function ModifierChain() {
+    constructor() {
         this._chain = [];
         if (arguments.length) this.addModifier.apply(this, arguments);
     }
@@ -28,9 +29,9 @@ define(function(require, exports, module) {
      *
      * @param {...Modifier*} varargs args list of Modifiers
      */
-    ModifierChain.prototype.addModifier = function addModifier(varargs) {
+    addModifier(varargs) {
         Array.prototype.push.apply(this._chain, arguments);
-    };
+    }
 
     /**
      * Remove a modifier from the modifier chain.
@@ -39,11 +40,11 @@ define(function(require, exports, module) {
      *
      * @param {Modifier} modifier
      */
-    ModifierChain.prototype.removeModifier = function removeModifier(modifier) {
-        var index = this._chain.indexOf(modifier);
+    removeModifier(modifier) {
+        let index = this._chain.indexOf(modifier);
         if (index < 0) return;
         this._chain.splice(index, 1);
-    };
+    }
 
     /**
      * Return render spec for this Modifier, applying to the provided
@@ -57,14 +58,12 @@ define(function(require, exports, module) {
      * @return {Object} render spec for this Modifier, including the
      *    provided target
      */
-    ModifierChain.prototype.modify = function modify(input) {
-        var chain  = this._chain;
-        var result = input;
-        for (var i = 0; i < chain.length; i++) {
+    modify(input) {
+        let chain  = this._chain;
+        let result = input;
+        for (let i = 0; i < chain.length; i++) {
             result = chain[i].modify(result);
         }
         return result;
-    };
-
-    module.exports = ModifierChain;
-});
+    }
+}

@@ -1,18 +1,21 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: felix@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var CachedMap = require('../transitions/CachedMap');
-    var Entity = require('../core/Entity');
-    var EventHandler = require('../core/EventHandler');
-    var Transform = require('../core/Transform');
-    var RenderController = require('./RenderController');
+import CachedMap from '../transitions/CachedMap.js';
+import Entity from '../core/Entity.js';
+import EventHandler from '../core/EventHandler.js';
+import Transform from '../core/Transform.js';
+import RenderController from './RenderController.js';
+
+export default class EdgeSwapper {
+
 
     /**
      * Container which handles swapping renderables from the edge of its parent context.
@@ -22,13 +25,13 @@ define(function(require, exports, module) {
      *   Takes the same options as RenderController.
      * @uses RenderController
      */
-    function EdgeSwapper(options) {
+    constructor(options) {
         this._currentTarget = null;
         this._size = [undefined, undefined];
 
         this._controller = new RenderController(options);
-        this._controller.inTransformFrom(CachedMap.create(_transformMap.bind(this, 0.0001)));
-        this._controller.outTransformFrom(CachedMap.create(_transformMap.bind(this, -0.0001)));
+        this._controller.inTransformFrom(CachedMap.create(this._transformMap(0.0001)));
+        this._controller.outTransformFrom(CachedMap.create(this._transformMap(-0.0001)));
 
         this._eventInput = new EventHandler();
         EventHandler.setInputHandler(this, this._eventInput);
@@ -37,7 +40,7 @@ define(function(require, exports, module) {
         if (options) this.setOptions(options);
     }
 
-    function _transformMap(zMax, progress) {
+    _transformMap(zMax, progress) {
         return Transform.translate(this._size[0] * (1 - progress), 0, zMax * (1 - progress));
     }
 
@@ -47,7 +50,7 @@ define(function(require, exports, module) {
      * @method show
      * @param {Object} content The renderable you want to display.
      */
-    EdgeSwapper.prototype.show = function show(content) {
+    show(content) {
         // stop sending input to old target
         if (this._currentTarget) this._eventInput.unpipe(this._currentTarget);
 
@@ -57,7 +60,7 @@ define(function(require, exports, module) {
         if (this._currentTarget && this._currentTarget.trigger) this._eventInput.pipe(this._currentTarget);
 
         this._controller.show.apply(this._controller, arguments);
-    };
+    }
 
     /**
      * Patches the EdgeSwapper instance's options with the passed-in ones.
@@ -65,9 +68,9 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param {Options} options An object of configurable options for the Edgeswapper instance.
      */
-    EdgeSwapper.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         this._controller.setOptions(options);
-    };
+    }
 
     /**
      * Generate a render spec from the contents of this component.
@@ -76,9 +79,9 @@ define(function(require, exports, module) {
      * @method render
      * @return {number} Render spec for this component
      */
-    EdgeSwapper.prototype.render = function render() {
+    render() {
         return this._entityId;
-    };
+    }
 
     /**
      * Apply changes from this component to the corresponding document element.
@@ -89,7 +92,7 @@ define(function(require, exports, module) {
      * @method commit
      * @param {Context} context commit context
      */
-    EdgeSwapper.prototype.commit = function commit(context) {
+    commit(context) {
         this._size[0] = context.size[0];
         this._size[1] = context.size[1];
 
@@ -100,7 +103,5 @@ define(function(require, exports, module) {
             size: context.size,
             target: this._controller.render()
         };
-    };
-
-    module.exports = EdgeSwapper;
-});
+    }
+}

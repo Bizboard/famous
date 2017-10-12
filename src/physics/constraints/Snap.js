@@ -1,15 +1,17 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Constraint = require('./Constraint');
-    var Vector = require('../../math/Vector');
+import Constraint from './Constraint.js';
+import Vector from '../../math/Vector.js';
+
+export default class Snap extends Constraint {
 
     /**
      *  A spring constraint is like a spring force, except that it is always
@@ -28,8 +30,8 @@ define(function(require, exports, module) {
      *  @param {Array} [options.anchor] The location of the spring's anchor, if not another physics body.
      *
      */
-    function Snap(options) {
-        Constraint.call(this);
+    constructor(options) {
+        super(...arguments);
 
         this.options = Object.create(this.constructor.DEFAULT_OPTIONS);
         if (options) this.setOptions(options);
@@ -41,17 +43,12 @@ define(function(require, exports, module) {
         this.impulse2 = new Vector();
     }
 
-    Snap.prototype = Object.create(Constraint.prototype);
-    Snap.prototype.constructor = Snap;
-
-    Snap.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
         period : 300,
         dampingRatio : 0.1,
         length : 0,
         anchor : undefined
-    };
-
-    /** const */ var pi = Math.PI;
+    }
 
     /**
      * Basic options setter
@@ -59,7 +56,7 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param options {Objects} options
      */
-    Snap.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         if (options.anchor !== undefined) {
             if (options.anchor   instanceof Vector) this.options.anchor = options.anchor;
             if (options.anchor.position instanceof Vector) this.options.anchor = options.anchor.position;
@@ -68,8 +65,8 @@ define(function(require, exports, module) {
         if (options.length !== undefined) this.options.length = options.length;
         if (options.dampingRatio !== undefined) this.options.dampingRatio = options.dampingRatio;
         if (options.period !== undefined) this.options.period = options.period;
-        Constraint.prototype.setOptions.call(this, options);
-    };
+        super.setOptions(options);
+    }
 
     /**
      * Calculates energy of spring
@@ -79,20 +76,20 @@ define(function(require, exports, module) {
      * @param source {Body} source physics body
      * @return energy {Number}
      */
-    Snap.prototype.getEnergy = function getEnergy(targets, source) {
-        var options     = this.options;
-        var restLength  = options.length;
-        var anchor      = options.anchor || source.position;
-        var strength    = Math.pow(2 * pi / options.period, 2);
+    getEnergy(targets, source) {
+        let options     = this.options;
+        let restLength  = options.length;
+        let anchor      = options.anchor || source.position;
+        let strength    = Math.pow(2 * Math.PI / options.period, 2);
 
-        var energy = 0.0;
-        for (var i = 0; i < targets.length; i++){
-            var target = targets[i];
-            var dist = anchor.sub(target.position).norm() - restLength;
+        let energy = 0.0;
+        for (let i = 0; i < targets.length; i++){
+            let target = targets[i];
+            let dist = anchor.sub(target.position).norm() - restLength;
             energy += 0.5 * strength * dist * dist;
         }
         return energy;
-    };
+    }
 
     /**
      * Adds a spring impulse to a physics body's velocity due to the constraint
@@ -102,32 +99,32 @@ define(function(require, exports, module) {
      * @param source {Body}         The source of the constraint
      * @param dt {Number}           Delta time
      */
-    Snap.prototype.applyConstraint = function applyConstraint(targets, source, dt) {
-        var options      = this.options;
-        var pDiff        = this.pDiff;
-        var vDiff        = this.vDiff;
-        var impulse1     = this.impulse1;
-        var impulse2     = this.impulse2;
-        var length       = options.length;
-        var anchor       = options.anchor || source.position;
-        var period       = options.period;
-        var dampingRatio = options.dampingRatio;
+    applyConstraint(targets, source, dt) {
+        let options      = this.options;
+        let pDiff        = this.pDiff;
+        let vDiff        = this.vDiff;
+        let impulse1     = this.impulse1;
+        let impulse2     = this.impulse2;
+        let length       = options.length;
+        let anchor       = options.anchor || source.position;
+        let period       = options.period;
+        let dampingRatio = options.dampingRatio;
 
-        for (var i = 0; i < targets.length; i++) {
-            var target = targets[i];
+        for (let i = 0; i < targets.length; i++) {
+            let target = targets[i];
 
-            var p1 = target.position;
-            var v1 = target.velocity;
-            var m1 = target.mass;
-            var w1 = target.inverseMass;
+            let p1 = target.position;
+            let v1 = target.velocity;
+            let m1 = target.mass;
+            let w1 = target.inverseMass;
 
             pDiff.set(p1.sub(anchor));
-            var dist = pDiff.norm() - length;
-            var effMass;
+            let dist = pDiff.norm() - length;
+            let effMass;
 
             if (source) {
-                var w2 = source.inverseMass;
-                var v2 = source.velocity;
+                let w2 = source.inverseMass;
+                let v2 = source.velocity;
                 vDiff.set(v1.sub(v2));
                 effMass = 1 / (w1 + w2);
             }
@@ -136,22 +133,22 @@ define(function(require, exports, module) {
                 effMass = m1;
             }
 
-            var gamma;
-            var beta;
+            let gamma;
+            let beta;
 
             if (this.options.period === 0) {
                 gamma = 0;
                 beta = 1;
             }
             else {
-                var k = 4 * effMass * pi * pi / (period * period);
-                var c = 4 * effMass * pi * dampingRatio / period;
+                let k = 4 * effMass * Math.PI * Math.PI / (period * period);
+                let c = 4 * effMass * Math.PI * dampingRatio / period;
 
                 beta  = dt * k / (c + dt * k);
                 gamma = 1 / (c + dt*k);
             }
 
-            var antiDrift = beta/dt * dist;
+            let antiDrift = beta/dt * dist;
             pDiff.normalize(-antiDrift)
                 .sub(vDiff)
                 .mult(dt / (gamma + dt/effMass))
@@ -169,7 +166,5 @@ define(function(require, exports, module) {
                 source.applyImpulse(impulse2);
             }
         }
-    };
-
-    module.exports = Snap;
-});
+    }
+}

@@ -1,96 +1,97 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
-/*eslint-disable new-cap */
-define(function(require, exports, module) {
-    var RAND = Math.random;
 
-    function _randomFloat(min, max) {
-        return min + RAND() * (max - min);
-    }
 
-    function _randomInteger(min, max) {
-        return min + ((RAND() * (max - min + 1)) >> 0);
-    }
+export default class Random {
 
-    function _range(randomFunction, min, max, dim) {
-        min = (min !== undefined) ? min : 0;
-        max = (max !== undefined) ? max : 1;
-        if (dim !== undefined) {
-            var result = [];
-            for (var i = 0; i < dim; i++) result.push(randomFunction(min, max));
-            return result;
-        }
-        else return randomFunction(min, max);
-    }
+  static RAND = Math.random;
 
-    /**
-     * Very simple uniform random number generator library wrapping Math.random().
-     *
-     * @class Random
-     * @static
-     */
-    var Random = {};
+  static _randomFloat(min, max) {
+      return min + RAND() * (max - min);
+  }
 
-    /**
-     * Get single random integer between min and max (inclusive), or array
-     *   of size dim if specified.
-     *
-     * @method integer
-     *
-     * @param {Number} min lower bound, default 0
-     * @param {Number} max upper bound, default 1
-     * @param {Number} dim (optional) dimension of output array, if specified
-     * @return {number | array<number>} random integer, or optionally, an array of random integers
-     */
-    Random.integer = function integer(min, max, dim) {
-        return _range(_randomInteger, min, max, dim);
-    };
+  static _randomInteger(min, max) {
+      return min + ((RAND() * (max - min + 1)) >> 0);
+  }
 
-    /**
-     * Get single random float between min and max (inclusive), or array
-     *   of size dim if specified
-     *
-     * @method range
-     *
-     * @param {Number} min lower bound, default 0
-     * @param {Number} max upper bound, default 1
-     * @param {Number} [dim] dimension of output array, if specified
-     * @return {Number} random float, or optionally an array
-     */
-    Random.range = function range(min, max, dim) {
-        return _range(_randomFloat, min, max, dim);
-    };
+  static _range(randomFunction, min, max, dim) {
+      min = (min !== undefined) ? min : 0;
+      max = (max !== undefined) ? max : 1;
+      if (dim !== undefined) {
+          let result = [];
+          for (let i = 0; i < dim; i++) result.push(randomFunction(min, max));
+          return result;
+      }
+      else return randomFunction(min, max);
+  }
 
-    /**
-     * Return random number among the set {-1 ,1}
-     *
-     * @method sign
-     *
-     * @param {Number} prob probability of returning 1, default 0.5
-     * @return {Number} random sign (-1 or 1)
-     */
-    Random.sign = function sign(prob) {
-        return Random.bool(prob) ? 1 : -1;
-    };
+  /**
+   * Very simple uniform random number generator library wrapping Math.random().
+   *
+   * @class Random
+   * @static
+   */
+  static Random = {};
 
-    /**
-     * Return random boolean value, true or false.
-     *
-     * @method bool
-     *
-     * @param {Number} prob probability of returning true, default 0.5
-     * @return {Boolean} random boolean
-     */
-    Random.bool = function bool(prob) {
-        prob = (prob !== undefined) ? prob : 0.5;
-        return RAND() < prob;
-    };
+  /**
+   * Get single random integer between min and max (inclusive), or array
+   *   of size dim if specified.
+   *
+   * @method integer
+   *
+   * @param {Number} min lower bound, default 0
+   * @param {Number} max upper bound, default 1
+   * @param {Number} dim (optional) dimension of output array, if specified
+   * @return {number | array<number>} random integer, or optionally, an array of random integers
+   */
+  static integer(min, max, dim) {
+      return _range(_randomInteger, min, max, dim);
+  }
 
-    module.exports = Random;
-});
+  /**
+   * Get single random float between min and max (inclusive), or array
+   *   of size dim if specified
+   *
+   * @method range
+   *
+   * @param {Number} min lower bound, default 0
+   * @param {Number} max upper bound, default 1
+   * @param {Number} [dim] dimension of output array, if specified
+   * @return {Number} random float, or optionally an array
+   */
+  static range(min, max, dim) {
+      return _range(_randomFloat, min, max, dim);
+  }
+
+  /**
+   * Return random number among the set {-1 ,1}
+   *
+   * @method sign
+   *
+   * @param {Number} prob probability of returning 1, default 0.5
+   * @return {Number} random sign (-1 or 1)
+   */
+  static sign(prob) {
+      return Random.bool(prob) ? 1 : -1;
+  }
+
+  /**
+   * Return random boolean value, true or false.
+   *
+   * @method bool
+   *
+   * @param {Number} prob probability of returning true, default 0.5
+   * @return {Boolean} random boolean
+   */
+  static bool(prob) {
+      prob = (prob !== undefined) ? prob : 0.5;
+      return RAND() < prob;
+  }
+}

@@ -1,14 +1,17 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Drag = require('./Drag');
+import Force from './Force.js';
+import Drag from './Drag.js';
+
+export default class RotationalDrag extends Drag {
 
     /**
      * Rotational drag is a force that opposes angular velocity.
@@ -19,15 +22,12 @@ define(function(require, exports, module) {
      * @extends Force
      * @param {Object} options options to set on drag
      */
-    function RotationalDrag(options) {
-        Drag.call(this, options);
+    constructor(options) {
+      super(...arguments);
     }
 
-    RotationalDrag.prototype = Object.create(Drag.prototype);
-    RotationalDrag.prototype.constructor = RotationalDrag;
-
-    RotationalDrag.DEFAULT_OPTIONS = Drag.DEFAULT_OPTIONS;
-    RotationalDrag.FORCE_FUNCTIONS = Drag.FORCE_FUNCTIONS;
+    static DEFAULT_OPTIONS = Drag.DEFAULT_OPTIONS;
+    static FORCE_FUNCTIONS = Drag.FORCE_FUNCTIONS;
 
     /**
      * @property Repulsion.FORCE_FUNCTIONS
@@ -35,7 +35,7 @@ define(function(require, exports, module) {
      * @protected
      * @static
      */
-    RotationalDrag.FORCE_FUNCTIONS = {
+    static FORCE_FUNCTIONS = {
 
         /**
          * A drag force proprtional to the angular velocity
@@ -66,22 +66,22 @@ define(function(require, exports, module) {
      * @method applyForce
      * @param targets {Array.Body} Array of bodies to apply drag force to.
      */
-    RotationalDrag.prototype.applyForce = function applyForce(targets) {
-        var strength       = this.options.strength;
-        var forceFunction  = this.options.forceFunction;
-        var force          = this.force;
+    applyForce(targets) {
+        let strength       = this.options.strength;
+        let forceFunction  = this.options.forceFunction;
+        let force          = this.force;
 
         //TODO: rotational drag as function of inertia
 
-        var index;
-        var particle;
+        let index;
+        let particle;
 
         for (index = 0; index < targets.length; index++) {
             particle = targets[index];
             forceFunction(particle.angularVelocity).mult(-100*strength).put(force);
             particle.applyTorque(force);
         }
-    };
+    }
 
     /*
      * Setter for options.
@@ -89,9 +89,7 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param {Objects} options
      */
-    RotationalDrag.prototype.setOptions = function setOptions(options) {
-        for (var key in options) this.options[key] = options[key];
-    };
-
-    module.exports = RotationalDrag;
-});
+    setOptions(options) {
+        for (let key in options) this.options[key] = options[key];
+    }
+}

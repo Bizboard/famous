@@ -1,7 +1,18 @@
-define(function(require, exports, module) {
-    var Transitionable = require('../transitions/Transitionable');
-    var OptionsManager = require('../core/OptionsManager');
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
+ *
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
+ */
 
+ import Transitionable from '../transitions/Transitionable.js';
+ import OptionsManager from '../core/OptionsManager.js';
+
+
+export default class Fader {
     /**
      * Modifier that allows you to fade the opacity of affected renderables in and out.
      * @class Fader
@@ -15,7 +26,7 @@ define(function(require, exports, module) {
      * method is called.
      *
      */
-    function Fader(options, startState) {
+    constructor(options, startState) {
         this.options = Object.create(Fader.DEFAULT_OPTIONS);
         this._optionsManager = new OptionsManager(this.options);
 
@@ -25,12 +36,12 @@ define(function(require, exports, module) {
         this.transitionHelper = new Transitionable(startState);
     }
 
-    Fader.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
         cull: false,
         transition: true,
         pulseInTransition: true,
         pulseOutTransition: true
-    };
+    }
 
     /**
      * Set internal options, overriding any default options
@@ -39,9 +50,9 @@ define(function(require, exports, module) {
      *
      * @param {Object} [options] overrides of default options.  See constructor.
      */
-    Fader.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         return this._optionsManager.setOptions(options);
-    };
+    }
 
     /**
      * Fully displays the Fader instance's associated renderables.
@@ -50,10 +61,10 @@ define(function(require, exports, module) {
      * @param {Transition} [transition] The transition that coordinates setting to the new state.
      * @param {Function} [callback] A callback that executes once you've transitioned to the fully shown state.
      */
-    Fader.prototype.show = function show(transition, callback) {
+    show(transition, callback) {
         transition = transition || this.options.transition;
         this.set(1, transition, callback);
-    };
+    }
 
     /**
      * Fully fades the Fader instance's associated renderables.
@@ -62,10 +73,10 @@ define(function(require, exports, module) {
      * @param {Transition} [transition] The transition that coordinates setting to the new state.
      * @param {Function} [callback] A callback that executes once you've transitioned to the fully faded state.
      */
-    Fader.prototype.hide = function hide(transition, callback) {
+    hide(transition, callback) {
         transition = transition || this.options.transition;
         this.set(0, transition, callback);
-    };
+    }
 
     /**
      * Manually sets the opacity state of the fader to the passed-in one. Executes with an optional
@@ -76,19 +87,19 @@ define(function(require, exports, module) {
      * @param {Transition} [transition] The transition that coordinates setting to the new state.
      * @param {Function} [callback] A callback that executes once you've finished executing the pulse.
      */
-    Fader.prototype.set = function set(state, transition, callback) {
+    set(state, transition, callback) {
         this.halt();
         this.transitionHelper.set(state, transition, callback);
-    };
+    }
 
     /**
      * Halt the transition
      *
      * @method halt
      */
-    Fader.prototype.halt = function halt() {
+    halt() {
         this.transitionHelper.halt();
-    };
+    }
 
     /**
      * Tells you if your Fader instance is above its visibility threshold.
@@ -96,9 +107,9 @@ define(function(require, exports, module) {
      * @method isVisible
      * @return {Boolean} Whether or not your Fader instance is visible.
      */
-    Fader.prototype.isVisible = function isVisible() {
+    isVisible() {
         return (this.transitionHelper.get() > 0);
-    };
+    }
 
     /**
      * Return render spec for this Modifier, applying to the provided
@@ -112,11 +123,9 @@ define(function(require, exports, module) {
      * @return {Object} render spec for this Modifier, including the
      *    provided target
      */
-    Fader.prototype.modify = function modify(target) {
-        var currOpacity = this.transitionHelper.get();
+    modify(target) {
+        let currOpacity = this.transitionHelper.get();
         if (this.options.cull && !currOpacity) return undefined;
         else return {opacity: currOpacity, target: target};
-    };
-
-    module.exports = Fader;
-});
+    }
+}

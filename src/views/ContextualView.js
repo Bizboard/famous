@@ -1,17 +1,20 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mike@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Entity = require('../core/Entity');
-    var Transform = require('../core/Transform');
-    var EventHandler = require('../core/EventHandler');
-    var OptionsManager = require('../core/OptionsManager');
+import Entity from '../core/Entity.js';
+import Transform from '../core/Transform.js';
+import EventHandler from '../core/EventHandler.js';
+import OptionsManager from '../core/OptionsManager.js';
+
+
+export default class ContextualView {
 
     /**
      * ContextualView is an interface for creating views that need to
@@ -26,7 +29,7 @@ define(function(require, exports, module) {
      * aware of their parent's size.
      * @deprecated
      */
-    function ContextualView(options) {
+    constructor(options) {
         this.options = Object.create(this.constructor.DEFAULT_OPTIONS || ContextualView.DEFAULT_OPTIONS);
         this._optionsManager = new OptionsManager(this.options);
         if (options) this.setOptions(options);
@@ -39,7 +42,7 @@ define(function(require, exports, module) {
         this._id = Entity.register(this);
     }
 
-    ContextualView.DEFAULT_OPTIONS = {};
+    static DEFAULT_OPTIONS = {};
 
     /**
      * Patches the ContextualLayout instance's options with the passed-in ones.
@@ -47,9 +50,9 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param {Options} options An object of configurable options for the ContextualLayout instance.
      */
-    ContextualView.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         return this._optionsManager.setOptions(options);
-    };
+    }
 
     /**
      * Returns ContextualLayout instance's options.
@@ -58,9 +61,9 @@ define(function(require, exports, module) {
      * @param {string} key
      * @return {Options} options The instance's object of configurable options.
      */
-    ContextualView.prototype.getOptions = function getOptions(key) {
+    getOptions(key) {
         return this._optionsManager.getOptions(key);
-    };
+    }
 
     /**
      * Return the registers Entity id for the ContextualView.
@@ -69,9 +72,9 @@ define(function(require, exports, module) {
      * @method render
      * @return {Number} Registered Entity id
      */
-    ContextualView.prototype.render = function render() {
+    render() {
         return this._id;
-    };
+    }
 
     /**
      * Apply changes from this component to the corresponding document element.
@@ -82,7 +85,6 @@ define(function(require, exports, module) {
      * @method commit
      * @param {Context} context commit context
      */
-    ContextualView.prototype.commit = function commit(context) {};
+    commit(context) {}
 
-    module.exports = ContextualView;
-});
+}

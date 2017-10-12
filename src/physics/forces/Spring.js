@@ -1,17 +1,19 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
+
+import Force from './Force.js';
+import Vector from '../../math/Vector.js';
 
 /*global console */
 
-define(function(require, exports, module) {
-    var Force = require('./Force');
-    var Vector = require('../../math/Vector');
+export default class Spring extends Force {
 
     /**
      *  A force that moves a physics body to a location with a spring motion.
@@ -22,24 +24,19 @@ define(function(require, exports, module) {
      *  @extends Force
      *  @param {Object} options options to set on drag
      */
-    function Spring(options) {
-        Force.call(this);
-
-        this.options = Object.create(this.constructor.DEFAULT_OPTIONS);
-        if (options) this.setOptions(options);
+    constructor(options) {
+        super(...arguments);
 
         //registers
         this.disp = new Vector(0,0,0);
 
-        _init.call(this);
+        this.options = Object.create(this.constructor.DEFAULT_OPTIONS);
+        if (options) this.setOptions(options);
+        else this._init();
     }
 
-    Spring.prototype = Object.create(Force.prototype);
-    Spring.prototype.constructor = Spring;
-
     /** @const */
-    var pi = Math.PI;
-    var MIN_PERIOD = 150;
+    static MIN_PERIOD = 150;
 
     /**
      * @property Spring.FORCE_FUNCTIONS
@@ -47,7 +44,7 @@ define(function(require, exports, module) {
      * @protected
      * @static
      */
-    Spring.FORCE_FUNCTIONS = {
+    static FORCE_FUNCTIONS = {
 
         /**
          * A FENE (Finitely Extensible Nonlinear Elastic) spring force
@@ -59,8 +56,8 @@ define(function(require, exports, module) {
          * @return {Number} unscaled force
          */
         FENE : function(dist, rMax) {
-            var rMaxSmall = rMax * .99;
-            var r = Math.max(Math.min(dist, rMaxSmall), -rMaxSmall);
+            let rMaxSmall = rMax * .99;
+            let r = Math.max(Math.min(dist, rMaxSmall), -rMaxSmall);
             return r / (1 - r * r/(rMax * rMax));
         },
 
@@ -75,7 +72,7 @@ define(function(require, exports, module) {
         HOOK : function(dist) {
             return dist;
         }
-    };
+    }
 
     /**
      * @property Spring.DEFAULT_OPTIONS
@@ -139,21 +136,21 @@ define(function(require, exports, module) {
          * @type Function
          */
         forceFunction : Spring.FORCE_FUNCTIONS.HOOK
-    };
-
-    function _calcStiffness() {
-        var options = this.options;
-        options.stiffness = Math.pow(2 * pi / options.period, 2);
     }
 
-    function _calcDamping() {
-        var options = this.options;
-        options.damping = 4 * pi * options.dampingRatio / options.period;
+    _calcStiffness() {
+        let options = this.options;
+        options.stiffness = Math.pow(2 * Math.PI / options.period, 2);
     }
 
-    function _init() {
-        _calcStiffness.call(this);
-        _calcDamping.call(this);
+    _calcDamping() {
+        let options = this.options;
+        options.damping = 4 * Math.PI * options.dampingRatio / options.period;
+    }
+
+    _init() {
+        this._calcStiffness();
+        this._calcDamping();
     }
 
     /**
@@ -162,7 +159,7 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param options {Object}
      */
-    Spring.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         // TODO fix no-console error
         /* eslint no-console: 0 */
 
@@ -185,9 +182,9 @@ define(function(require, exports, module) {
         if (options.forceFunction !== undefined) this.options.forceFunction = options.forceFunction;
         if (options.maxLength !== undefined) this.options.maxLength = options.maxLength;
 
-        _init.call(this);
-        Force.prototype.setOptions.call(this, options);
-    };
+        this._init();
+        super.setOptions(options);
+    }
 
     /**
      * Adds a spring force to a physics body's force accumulator.
@@ -195,24 +192,24 @@ define(function(require, exports, module) {
      * @method applyForce
      * @param targets {Array.Body} Array of bodies to apply force to.
      */
-    Spring.prototype.applyForce = function applyForce(targets, source) {
-        var force = this.force;
-        var disp = this.disp;
-        var options = this.options;
+    applyForce(targets, source) {
+        let force = this.force;
+        let disp = this.disp;
+        let options = this.options;
 
-        var stiffness = options.stiffness;
-        var damping = options.damping;
-        var restLength = options.length;
-        var maxLength = options.maxLength;
-        var anchor = options.anchor || source.position;
-        var forceFunction = options.forceFunction;
+        let stiffness = options.stiffness;
+        let damping = options.damping;
+        let restLength = options.length;
+        let maxLength = options.maxLength;
+        let anchor = options.anchor || source.position;
+        let forceFunction = options.forceFunction;
 
-        var i;
-        var target;
-        var p2;
-        var v2;
-        var dist;
-        var m;
+        let i;
+        let target;
+        let p2;
+        let v2;
+        let dist;
+        let m;
 
         for (i = 0; i < targets.length; i++) {
             target = targets[i];
@@ -239,7 +236,7 @@ define(function(require, exports, module) {
             target.applyForce(force);
             if (source) source.applyForce(force.mult(-1));
         }
-    };
+    }
 
     /**
      * Calculates the potential energy of the spring.
@@ -248,20 +245,18 @@ define(function(require, exports, module) {
      * @param [targets] target  The physics body attached to the spring
      * @return {source}         The potential energy of the spring
      */
-    Spring.prototype.getEnergy = function getEnergy(targets, source) {
-        var options     = this.options;
-        var restLength  = options.length;
-        var anchor      = (source) ? source.position : options.anchor;
-        var strength    = options.stiffness;
+    getEnergy(targets, source) {
+        let options     = this.options;
+        let restLength  = options.length;
+        let anchor      = (source) ? source.position : options.anchor;
+        let strength    = options.stiffness;
 
-        var energy = 0.0;
-        for (var i = 0; i < targets.length; i++){
-            var target = targets[i];
-            var dist = anchor.sub(target.position).norm() - restLength;
+        let energy = 0.0;
+        for (let i = 0; i < targets.length; i++){
+            let target = targets[i];
+            let dist = anchor.sub(target.position).norm() - restLength;
             energy += 0.5 * strength * dist * dist;
         }
         return energy;
-    };
-
-    module.exports = Spring;
-});
+    }
+}

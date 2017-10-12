@@ -1,17 +1,20 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
+
+import Utility from '../utilities/Utility.js';
+import View from '../core/View.js';
+import GridLayout from '../views/GridLayout.js';
+import ToggleButton from './ToggleButton.js';
+
 /*eslint-disable new-cap */
-define(function(require, exports, module) {
-    var Utility = require('../utilities/Utility');
-    var View = require('../core/View');
-    var GridLayout = require('../views/GridLayout');
-    var ToggleButton = require('./ToggleButton');
+export default class TabBar extends View {
 
     /**
      * A view for displaying various tabs that dispatch events
@@ -23,8 +26,8 @@ define(function(require, exports, module) {
      *
      * @param {object} options overrides of default options
      */
-    function TabBar(options) {
-        View.apply(this, arguments);
+    constructor(options) {
+        super(...arguments);
 
         this.layout = new GridLayout();
         this.buttons = [];
@@ -34,13 +37,10 @@ define(function(require, exports, module) {
         this.layout.sequenceFrom(this.buttons);
         this._add(this.layout);
 
-        this._optionsManager.on('change', _updateOptions.bind(this));
+        this._optionsManager.on('change', this._updateOptions);
     }
 
-    TabBar.prototype = Object.create(View.prototype);
-    TabBar.prototype.constructor = TabBar;
-
-    TabBar.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
         sections: [],
         widget: ToggleButton,
         size: [undefined, 50],
@@ -48,7 +48,7 @@ define(function(require, exports, module) {
         buttons: {
             toggleMode: ToggleButton.ON
         }
-    };
+    }
 
     /**
      * Update the options for all components of the view
@@ -57,20 +57,20 @@ define(function(require, exports, module) {
      *
      * @param {object} data component options
      */
-    function _updateOptions(data) {
-        var id = data.id;
-        var value = data.value;
+    _updateOptions(data) {
+        let id = data.id;
+        let value = data.value;
 
         if (id === 'direction') {
             this.layout.setOptions({dimensions: _resolveGridDimensions.call(this.buttons.length, this.options.direction)});
         }
         else if (id === 'buttons') {
-            for (var i in this.buttons) {
+            for (let i in this.buttons) {
                 this.buttons[i].setOptions(value);
             }
         }
         else if (id === 'sections') {
-            for (var sectionId in this.options.sections) {
+            for (let sectionId in this.options.sections) {
                 this.defineSection(sectionId, this.options.sections[sectionId]);
             }
         }
@@ -86,7 +86,7 @@ define(function(require, exports, module) {
      *
      * @return {array} the dimensions of the tab section
      */
-    function _resolveGridDimensions(count, direction) {
+    static _resolveGridDimensions(count, direction) {
         if (direction === Utility.Direction.X) return [count, 1];
         else return [1, count];
     }
@@ -100,14 +100,14 @@ define(function(require, exports, module) {
      * @param {string} id name of the button
      * @param {object} content data for the creation of a new ToggleButton
      */
-    TabBar.prototype.defineSection = function defineSection(id, content) {
-        var button;
-        var i = this._buttonIds[id];
+    defineSection(id, content) {
+        let button;
+        let i = this._buttonIds[id];
 
         if (i === undefined) {
             i = this.buttons.length;
             this._buttonIds[id] = i;
-            var widget = this.options.widget;
+            let widget = this.options.widget;
             button = new widget();
             this.buttons[i] = button;
             this.layout.setOptions({dimensions: _resolveGridDimensions(this.buttons.length, this.options.direction)});
@@ -122,7 +122,7 @@ define(function(require, exports, module) {
 
         this._buttonCallbacks[id] = this.select.bind(this, id);
         button.on('select', this._buttonCallbacks[id]);
-    };
+    }
 
     /**
      * Select a particular button and dispatch the id of the selection
@@ -132,8 +132,8 @@ define(function(require, exports, module) {
      *
      * @param {string} id button id
      */
-    TabBar.prototype.select = function select(id) {
-        var btn = this._buttonIds[id];
+    select(id) {
+        let btn = this._buttonIds[id];
         // this prevents event loop
         if (this.buttons[btn] && this.buttons[btn].isSelected()) {
             this._eventOutput.emit('select', {id: id});
@@ -142,10 +142,8 @@ define(function(require, exports, module) {
             this.buttons[btn].select();
         }
 
-        for (var i = 0; i < this.buttons.length; i++) {
+        for (let i = 0; i < this.buttons.length; i++) {
             if (i !== btn) this.buttons[i].deselect();
         }
-    };
-
-    module.exports = TabBar;
-});
+    }
+}

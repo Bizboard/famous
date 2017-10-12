@@ -1,17 +1,21 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function (require, exports, module) {
-  var Surface = require('../core/Surface');
-  var Context = require('../core/Context');
-  var ElementAllocator = require('../core/ElementAllocator');
-  var staticInherits = require('../utilities/StaticInherit.js').staticInherits;
+import Surface from '../core/Surface.js';
+import Context from '../core/Context.js';
+import ElementAllocator from '../core/ElementAllocator.js';
+
+export default class ContainerSurface extends Surface {
+
+  elementType = 'div';
+  elementClass = 'famous-surface';
 
   /**
    * ContainerSurface is an object designed to contain surfaces and
@@ -35,8 +39,8 @@ define(function (require, exports, module) {
    * @param {Array} [options.properties] string dictionary of HTML attributes to set on target div
    * @param {string} [options.content] inner (HTML) content of surface (should not be used)
    */
-  function ContainerSurface(options) {
-    Surface.call(this, options);
+  constructor(options) {
+    super(...arguments);
     this._container = document.createElement('div');
     this._container.classList.add('famous-group');
     this._container.classList.add('famous-container-group');
@@ -46,11 +50,6 @@ define(function (require, exports, module) {
     this.setContent(this._container);
   }
 
-  staticInherits(ContainerSurface, Surface);
-  ContainerSurface.prototype.constructor = ContainerSurface;
-  ContainerSurface.prototype.elementType = 'div';
-  ContainerSurface.prototype.elementClass = 'famous-surface';
-
   /**
    * Add renderables to this object's render tree
    *
@@ -59,9 +58,9 @@ define(function (require, exports, module) {
    * @param {Object} obj renderable object
    * @return {RenderNode} RenderNode wrapping this object, if not already a RenderNode
    */
-  ContainerSurface.prototype.add = function add() {
+  add() {
     return this.context.add.apply(this.context, arguments);
-  };
+  }
 
   /**
    * Return spec for this surface.  Note: Can result in a size recalculation.
@@ -71,10 +70,10 @@ define(function (require, exports, module) {
    *
    * @return {Object} render spec for this surface (spec id)
    */
-  ContainerSurface.prototype.render = function render() {
+  render() {
     if (this._sizeDirty) this._shouldRecalculateSize = true;
-    return Surface.prototype.render.apply(this, arguments);
-  };
+    return super.render(...arguments);
+  }
 
   /**
    * Place the document element this component manages into the document.
@@ -83,10 +82,10 @@ define(function (require, exports, module) {
    * @method deploy
    * @param {Node} target document parent of this container
    */
-  ContainerSurface.prototype.deploy = function deploy() {
+  deploy() {
     this._shouldRecalculateSize = true;
-    return Surface.prototype.deploy.apply(this, arguments);
-  };
+    return super.deploy(...arguments);
+  }
 
   /**
    * Apply changes from this component to the corresponding document element.
@@ -98,13 +97,11 @@ define(function (require, exports, module) {
    * @param {Context} context commit context
    * @return {undefined} TODO returns an undefined value
    */
-  ContainerSurface.prototype.commit = function commit(context) {
-    var previousSize = this._size ? [this._size[0], this._size[1]] : null;
-    var result = Surface.prototype.commit.apply(this, arguments);
+  commit(context) {
+    let previousSize = this._size ? [this._size[0], this._size[1]] : null;
+    let result = super.commit(...arguments);
     this.context.setSize(context.size);
     this.context.update({hide: context.opacity === 0 || context.hide});
     return result;
-  };
-
-  module.exports = ContainerSurface;
-});
+  }
+}

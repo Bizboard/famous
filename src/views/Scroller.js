@@ -1,12 +1,22 @@
-define(function(require, exports, module) {
-    var Entity = require('../core/Entity');
-    var Group = require('../core/Group');
-    var OptionsManager = require('../core/OptionsManager');
-    var Transform = require('../core/Transform');
-    var Utility = require('../utilities/Utility');
-    var ViewSequence = require('../core/ViewSequence');
-    var EventHandler = require('../core/EventHandler');
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
+ *
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
+ */
 
+import Entity from '../core/Entity.js';
+import Group from '../core/Group.js';
+import OptionsManager from '../core/OptionsManager.js';
+import Transform from '../core/Transform.js';
+import Utility from '../utilities/Utility.js';
+import ViewSequence from '../core/ViewSequence.js';
+import EventHandler from '../core/EventHandler.js';
+
+export default class Scroller {
     /**
      * Scroller lays out a collection of renderables, and will browse through them based on
      * accessed position. Scroller also broadcasts an 'edgeHit' event, with a position property of the location of the edge,
@@ -22,7 +32,7 @@ define(function(require, exports, module) {
      * @param {Number} [clipSize=undefined] The size of the area (in pixels) that Scroller will display content in.
      * @param {Number} [margin=undefined] The size of the area (in pixels) that Scroller will process renderables' associated calculations in.
      */
-    function Scroller(options) {
+    constructor(options) {
         this.options = Object.create(this.constructor.DEFAULT_OPTIONS);
         this._optionsManager = new OptionsManager(this.options);
         if (options) this._optionsManager.setOptions(options);
@@ -41,7 +51,7 @@ define(function(require, exports, module) {
         this._onEdge = 0; // -1 for top, 1 for bottom
 
         this.group = new Group();
-        this.group.add({render: _innerRender.bind(this)});
+        this.group.add({render: this._innerRender});
 
         this._entityId = Entity.register(this);
         this._size = [undefined, undefined];
@@ -54,34 +64,34 @@ define(function(require, exports, module) {
         EventHandler.setOutputHandler(this, this._eventOutput);
     }
 
-    Scroller.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
         direction: Utility.Direction.Y,
         margin: 0,
         clipSize: undefined,
         groupScroll: false
-    };
+    }
 
-    var EDGE_TOLERANCE = 0; //slop for detecting passing the edge
+    static EDGE_TOLERANCE = 0; //slop for detecting passing the edge
 
-    function _sizeForDir(size) {
+    _sizeForDir(size) {
         if (!size) size = this._contextSize;
         var dimension = this.options.direction;
         return (size[dimension] === undefined) ? this._contextSize[dimension] : size[dimension];
     }
 
-    function _output(node, offset, target) {
+    _output(node, offset, target) {
         var size = node.getSize ? node.getSize() : this._contextSize;
         var transform = this._outputFunction(offset);
         target.push({transform: transform, target: node.render()});
-        return _sizeForDir.call(this, size);
+        return this._sizeForDir(size);
     }
 
-    function _getClipSize() {
+    _getClipSize() {
         if (this.options.clipSize !== undefined) return this.options.clipSize;
         if (this._contextSize[this.options.direction] > this.getCumulativeSize()[this.options.direction]) {
-            return _sizeForDir.call(this, this.getCumulativeSize());
+            return this._sizeForDir(this.getCumulativeSize());
         } else {
-            return _sizeForDir.call(this, this._contextSize);
+            return this._sizeForDir(this._contextSize);
         }
     }
 
@@ -90,17 +100,17 @@ define(function(require, exports, module) {
     * @method getCumulativeSize
     * @return {array} a two value array of the view sequence's cumulative size up to the index.
     */
-    Scroller.prototype.getCumulativeSize = function(index) {
+    getCumulativeSize(index) {
         if (index === undefined) index = this._node._.cumulativeSizes.length - 1;
         return this._node._.getSize(index);
-    };
+    }
 
     /**
      * Patches the Scroller instance's options with the passed-in ones.
      * @method setOptions
      * @param {Options} options An object of configurable options for the Scroller instance.
      */
-    Scroller.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         if (options.groupScroll !== this.options.groupScroll) {
             if (options.groupScroll)
                 this.group.pipe(this._eventOutput);
@@ -108,16 +118,16 @@ define(function(require, exports, module) {
                 this.group.unpipe(this._eventOutput);
         }
         this._optionsManager.setOptions(options);
-    };
+    }
 
     /**
      * Tells you if the Scroller instance is on an edge.
      * @method onEdge
      * @return {Boolean} Whether the Scroller instance is on an edge or not.
      */
-    Scroller.prototype.onEdge = function onEdge() {
+    onEdge() {
         return this._onEdge;
-    };
+    }
 
     /**
      * Allows you to overwrite the way Scroller lays out it's renderables. Scroller will
@@ -128,7 +138,7 @@ define(function(require, exports, module) {
      * @param {Function} fn A function that takes an offset and returns a transform.
      * @param {Function} [masterFn]
      */
-    Scroller.prototype.outputFrom = function outputFrom(fn, masterFn) {
+    outputFrom(fn, masterFn) {
         if (!fn) {
             fn = function(offset) {
                 return (this.options.direction === Utility.Direction.X) ? Transform.translate(offset, 0) : Transform.translate(0, offset);
@@ -139,7 +149,7 @@ define(function(require, exports, module) {
         this._masterOutputFunction = masterFn ? masterFn : function(offset) {
             return Transform.inverse(fn(-offset));
         };
-    };
+    }
 
     /**
      * The Scroller instance's method for reading from an external position. Scroller uses
@@ -148,7 +158,7 @@ define(function(require, exports, module) {
      * @param {Getter} position Can be either a function that returns a position,
      * or an object with a get method that returns a position.
      */
-    Scroller.prototype.positionFrom = function positionFrom(position) {
+    positionFrom(position) {
         if (position instanceof Function) this._positionGetter = position;
         else if (position && position.get) this._positionGetter = position.get.bind(position);
         else {
@@ -156,7 +166,7 @@ define(function(require, exports, module) {
             this._position = position;
         }
         if (this._positionGetter) this._position = this._positionGetter.call(this);
-    };
+    }
 
     /**
      * Sets the collection of renderables under the Scroller instance's control.
@@ -165,11 +175,11 @@ define(function(require, exports, module) {
      * @param node {Array|ViewSequence} Either an array of renderables or a Famous viewSequence.
      * @chainable
      */
-    Scroller.prototype.sequenceFrom = function sequenceFrom(node) {
+    sequenceFrom(node) {
         if (node instanceof Array) node = new ViewSequence({array: node});
         this._node = node;
         this._positionOffset = 0;
-    };
+    }
 
     /**
      * Returns the width and the height of the Scroller instance.
@@ -177,9 +187,9 @@ define(function(require, exports, module) {
      * @method getSize
      * @return {Array} A two value array of the Scroller instance's current width and height (in that order).
      */
-    Scroller.prototype.getSize = function getSize(actual) {
+    getSize(actual) {
         return actual ? this._contextSize : this._size;
-    };
+    }
 
     /**
      * Generate a render spec from the contents of this component.
@@ -188,11 +198,11 @@ define(function(require, exports, module) {
      * @method render
      * @return {number} Render spec for this component
      */
-    Scroller.prototype.render = function render() {
+    render() {
         if (!this._node) return null;
         if (this._positionGetter) this._position = this._positionGetter.call(this);
         return this._entityId;
-    };
+    }
 
     /**
      * Apply changes from this component to the corresponding document element.
@@ -203,7 +213,7 @@ define(function(require, exports, module) {
      * @method commit
      * @param {Context} context commit context
      */
-    Scroller.prototype.commit = function commit(context) {
+    commit(context) {
         var transform = context.transform;
         var opacity = context.opacity;
         var origin = context.origin;
@@ -216,12 +226,12 @@ define(function(require, exports, module) {
             this._contextSize[1] = size[1];
 
             if (this.options.direction === Utility.Direction.X) {
-                this._size[0] = _getClipSize.call(this);
+                this._size[0] = this._getClipSize();
                 this._size[1] = undefined;
             }
             else {
                 this._size[0] = undefined;
-                this._size[1] = _getClipSize.call(this);
+                this._size[1] = this._getClipSize();
             }
         }
 
@@ -234,32 +244,32 @@ define(function(require, exports, module) {
             origin: origin,
             target: this.group.render()
         };
-    };
+    }
 
-    function _innerRender() {
+    _innerRender() {
         var size = null;
         var position = this._position;
         var result = [];
 
         var offset = -this._positionOffset;
-        var clipSize = _getClipSize.call(this);
+        var clipSize = this._getClipSize();
         var currNode = this._node;
         while (currNode && offset - position < clipSize + this.options.margin) {
-            offset += _output.call(this, currNode, offset, result);
+            offset += this._output(currNode, offset, result);
             currNode = currNode.getNext ? currNode.getNext() : null;
         }
 
         var sizeNode = this._node;
-        var nodesSize = _sizeForDir.call(this, sizeNode.getSize());
+        var nodesSize = this._sizeForDir(sizeNode.getSize());
         if (offset < clipSize) {
             while (sizeNode && nodesSize < clipSize) {
                 sizeNode = sizeNode.getPrevious();
-                if (sizeNode) nodesSize += _sizeForDir.call(this, sizeNode.getSize());
+                if (sizeNode) nodesSize += this._sizeForDir(sizeNode.getSize());
             }
             sizeNode = this._node;
             while (sizeNode && nodesSize < clipSize) {
                 sizeNode = sizeNode.getNext();
-                if (sizeNode) nodesSize += _sizeForDir.call(this, sizeNode.getSize());
+                if (sizeNode) nodesSize += this._sizeForDir(sizeNode.getSize());
             }
         }
 
@@ -291,20 +301,18 @@ define(function(require, exports, module) {
         offset = -this._positionOffset;
         if (currNode) {
             size = currNode.getSize ? currNode.getSize() : this._contextSize;
-            offset -= _sizeForDir.call(this, size);
+            offset -= this._sizeForDir(size);
         }
 
         while (currNode && ((offset - position) > -(clipSize + this.options.margin))) {
-            _output.call(this, currNode, offset, result);
+            this._output(currNode, offset, result);
             currNode = currNode.getPrevious ? currNode.getPrevious() : null;
             if (currNode) {
                 size = currNode.getSize ? currNode.getSize() : this._contextSize;
-                offset -= _sizeForDir.call(this, size);
+                offset -= this._sizeForDir(size);
             }
         }
 
         return result;
     }
-
-    module.exports = Scroller;
-});
+}

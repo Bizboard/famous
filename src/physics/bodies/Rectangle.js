@@ -1,15 +1,17 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Body = require('./Body');
-    var Matrix = require('../../math/Matrix');
+import Body from './Body.js';
+import Matrix from '../../math/Matrix.js';
+
+export default class Rectangle extends Body {
 
     /**
      * Implements a rectangular geometry for an Body with
@@ -19,26 +21,23 @@ define(function(require, exports, module) {
      * @extends Body
      * @constructor
      */
-    function Rectangle(options) {
-        options = options || {};
-        this.size = options.size || [0,0];
-        Body.call(this, options);
+    constructor(options) {
+      super(...arguments);
+      options = options || {};
+      this.size = options.size || [0,0];
     }
-
-    Rectangle.prototype = Object.create(Body.prototype);
-    Rectangle.prototype.constructor = Rectangle;
 
     /**
      * Basic setter for size.
      * @method setSize
      * @param size {Array} size = [width, height]
      */
-    Rectangle.prototype.setSize = function setSize(size) {
+    setSize(size) {
         this.size = size;
         this.setMomentsOfInertia();
-    };
+    }
 
-    Rectangle.prototype.setMomentsOfInertia = function setMomentsOfInertia() {
+    setMomentsOfInertia() {
         var m = this.mass;
         var w = this.size[0];
         var h = this.size[1];
@@ -54,8 +53,5 @@ define(function(require, exports, module) {
             [0, 12 / (m * w * w), 0],
             [0, 0, 12 / (m * (w * w + h * h))]
         ]);
-    };
-
-    module.exports = Rectangle;
-
-});
+    }
+}

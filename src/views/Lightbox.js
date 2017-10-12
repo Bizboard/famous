@@ -1,12 +1,23 @@
-define(function(require, exports, module) {
-    var Transform = require('../core/Transform');
-    var Modifier = require('../core/Modifier');
-    var RenderNode = require('../core/RenderNode');
-    var Utility = require('../utilities/Utility');
-    var OptionsManager = require('../core/OptionsManager');
-    var Transitionable = require('../transitions/Transitionable');
-    var TransitionableTransform = require('../transitions/TransitionableTransform');
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
+ *
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
+ */
 
+
+import Transform from '../core/Transform.js';
+import Modifier from '../core/Modifier.js';
+import RenderNode from '../core/RenderNode.js';
+import Utility from '../utilities/Utility.js';
+import OptionsManager from '../core/OptionsManager.js';
+import Transitionable from '../transitions/Transitionable.js';
+import TransitionableTransform from '../transitions/TransitionableTransform.js';
+
+export default class LightBox {
     /**
      * Lightbox, using transitions, shows and hides different renderables. Lightbox can essentially be
      * thought of as RenderController with a stateful implementation and interface.
@@ -42,7 +53,7 @@ define(function(require, exports, module) {
      *   out transition of the old one executes concurrently with the in transition of the new one,
       *  or synchronously beforehand.
      */
-    function Lightbox(options) {
+    constructor(options) {
         this.options = Object.create(Lightbox.DEFAULT_OPTIONS);
         this._optionsManager = new OptionsManager(this.options);
 
@@ -54,7 +65,7 @@ define(function(require, exports, module) {
         this.states = [];
     }
 
-    Lightbox.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
         inTransform: Transform.scale(0.001, 0.001, 0.001),
         inOpacity: 0,
         inOrigin: [0.5, 0.5],
@@ -70,7 +81,7 @@ define(function(require, exports, module) {
         inTransition: true,
         outTransition: true,
         overlap: false
-    };
+    }
 
     /**
      * Patches the Lightbox instance's options with the passed-in ones.
@@ -78,9 +89,9 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param {Options} options An object of configurable options for the Lightbox instance.
      */
-    Lightbox.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         return this._optionsManager.setOptions(options);
-    };
+    }
 
    /**
      * Show displays the targeted renderable with a transition and an optional callback to
@@ -91,7 +102,7 @@ define(function(require, exports, module) {
      * passed-in renderable.
      * @param {function} [callback] Executes after transitioning in the renderable.
      */
-    Lightbox.prototype.show = function show(renderable, transition, callback) {
+    show(renderable, transition, callback) {
         if (!renderable) {
             return this.hide(callback);
         }
@@ -135,7 +146,7 @@ define(function(require, exports, module) {
         stateItem.opacity.set(this.options.showOpacity, transition, _cb);
         stateItem.origin.set(this.options.showOrigin, transition, _cb);
         stateItem.align.set(this.options.showAlign, transition, _cb);
-    };
+    }
 
     /**
      * Hide hides the currently displayed renderable with an out transition.
@@ -144,7 +155,7 @@ define(function(require, exports, module) {
      * currently controlled renderable.
      * @param {function} [callback] Executes after transitioning out the renderable.
      */
-    Lightbox.prototype.hide = function hide(transition, callback) {
+    hide(transition, callback) {
         if (!this._showing) return;
         this._showing = false;
 
@@ -168,7 +179,7 @@ define(function(require, exports, module) {
         stateItem.opacity.set(this.options.outOpacity, transition, _cb);
         stateItem.origin.set(this.options.outOrigin, transition, _cb);
         stateItem.align.set(this.options.outAlign, transition, _cb);
-    };
+    }
 
     /**
      * Generate a render spec from the contents of this component.
@@ -177,13 +188,11 @@ define(function(require, exports, module) {
      * @method render
      * @return {number} Render spec for this component
      */
-    Lightbox.prototype.render = function render() {
+    render() {
         var result = [];
         for (var i = 0; i < this.nodes.length; i++) {
             result.push(this.nodes[i].render());
         }
         return result;
-    };
-
-    module.exports = Lightbox;
-});
+    }
+}

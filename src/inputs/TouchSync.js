@@ -1,15 +1,18 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
-define(function(require, exports, module) {
-    var TouchTracker = require('./TouchTracker');
-    var EventHandler = require('../core/EventHandler');
-    var OptionsManager = require('../core/OptionsManager');
+
+ import EventHandler from '../core/EventHandler.js';
+ import TouchTracker from './TouchTracker.js';
+ import OptionsManager from '../core/OptionsManager.js';
+
+export default class TouchSync {
 
     /**
      * Handles piped in touch events. Emits 'start', 'update', and 'events'
@@ -39,7 +42,7 @@ define(function(require, exports, module) {
      * @param [options.scale] {Number}       constant factor to scale velocity output
      * @param [options.touchLimit] {Number}  touchLimit upper bound for emitting events based on number of touches
      */
-    function TouchSync(options) {
+    constructor(options) {
         this.options =  Object.create(TouchSync.DEFAULT_OPTIONS);
         this._optionsManager = new OptionsManager(this.options);
         if (options) this.setOptions(options);
@@ -53,9 +56,9 @@ define(function(require, exports, module) {
         EventHandler.setOutputHandler(this, this._eventOutput);
         EventHandler.setInputHandler(this, this._touchTracker);
 
-        this._touchTracker.on('trackstart', _handleStart.bind(this));
-        this._touchTracker.on('trackmove', _handleMove.bind(this));
-        this._touchTracker.on('trackend', _handleEnd.bind(this));
+        this._touchTracker.on('trackstart', this._handleStart);
+        this._touchTracker.on('trackmove', this._handleMove);
+        this._touchTracker.on('trackend', this._handleEnd);
 
         this._payload = {
             delta    : null,
@@ -70,27 +73,27 @@ define(function(require, exports, module) {
         this._position = null; // to be deprecated
     }
 
-    TouchSync.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
         direction: undefined,
         rails: false,
         touchLimit: 1,
         velocitySampleLength: 10,
         scale: 1
-    };
+    }
 
-    TouchSync.DIRECTION_X = 0;
-    TouchSync.DIRECTION_Y = 1;
+    static DIRECTION_X = 0;
+    static DIRECTION_Y = 1;
 
-    var MINIMUM_TICK_TIME = 8;
+    static MINIMUM_TICK_TIME = 8;
 
     /**
      *  Triggered by trackstart.
      *  @method _handleStart
      *  @private
      */
-    function _handleStart(data) {
-        var velocity;
-        var delta;
+    _handleStart(data) {
+        let velocity;
+        let delta;
         if (this.options.direction !== undefined){
             this._position = 0;
             velocity = 0;
@@ -102,7 +105,7 @@ define(function(require, exports, module) {
             delta = [0, 0];
         }
 
-        var payload = this._payload;
+        let payload = this._payload;
         payload.delta = delta;
         payload.position = this._position;
         payload.velocity = velocity;
@@ -119,24 +122,24 @@ define(function(require, exports, module) {
      *  @method _handleMove
      *  @private
      */
-    function _handleMove(data) {
-        var history = data.history;
+    _handleMove(data) {
+        let history = data.history;
 
-        var currHistory = history[history.length - 1];
-        var prevHistory = history[history.length - 2];
+        let currHistory = history[history.length - 1];
+        let prevHistory = history[history.length - 2];
 
-        var distantHistory = history[history.length - this.options.velocitySampleLength] ?
+        let distantHistory = history[history.length - this.options.velocitySampleLength] ?
           history[history.length - this.options.velocitySampleLength] :
           history[history.length - 2];
 
-        var distantTime = distantHistory.timestamp;
-        var currTime = currHistory.timestamp;
+        let distantTime = distantHistory.timestamp;
+        let currTime = currHistory.timestamp;
 
-        var diffX = currHistory.x - prevHistory.x;
-        var diffY = currHistory.y - prevHistory.y;
+        let diffX = currHistory.x - prevHistory.x;
+        let diffY = currHistory.y - prevHistory.y;
 
-        var velDiffX = currHistory.x - distantHistory.x;
-        var velDiffY = currHistory.y - distantHistory.y;
+        let velDiffX = currHistory.x - distantHistory.x;
+        let velDiffY = currHistory.y - distantHistory.y;
 
         if (this.options.rails) {
             if (Math.abs(diffX) > Math.abs(diffY)) diffY = 0;
@@ -146,14 +149,14 @@ define(function(require, exports, module) {
             else velDiffX = 0;
         }
 
-        var diffTime = Math.max(currTime - distantTime, MINIMUM_TICK_TIME);
+        let diffTime = Math.max(currTime - distantTime, MINIMUM_TICK_TIME);
 
-        var velX = velDiffX / diffTime;
-        var velY = velDiffY / diffTime;
+        let velX = velDiffX / diffTime;
+        let velY = velDiffY / diffTime;
 
-        var scale = this.options.scale;
-        var nextVel;
-        var nextDelta;
+        let scale = this.options.scale;
+        let nextVel;
+        let nextDelta;
 
         if (this.options.direction === TouchSync.DIRECTION_X) {
             nextDelta = scale * diffX;
@@ -172,7 +175,7 @@ define(function(require, exports, module) {
             this._position[1] += nextDelta[1];
         }
 
-        var payload = this._payload;
+        let payload = this._payload;
         payload.delta    = nextDelta;
         payload.velocity = nextVel;
         payload.position = this._position;
@@ -189,7 +192,7 @@ define(function(require, exports, module) {
      *  @method _handleEnd
      *  @private
      */
-    function _handleEnd(data) {
+    _handleEnd(data) {
         this._payload.count = data.count;
         this._eventOutput.emit('end', this._payload);
     }
@@ -204,9 +207,9 @@ define(function(require, exports, module) {
      * @param [options.rails] {Boolean}      read from axis with greatest differential
      * @param [options.scale] {Number}       constant factor to scale velocity output
      */
-    TouchSync.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         return this._optionsManager.setOptions(options);
-    };
+    }
 
     /**
      * Return entire options dictionary, including defaults.
@@ -214,9 +217,7 @@ define(function(require, exports, module) {
      * @method getOptions
      * @return {Object} configuration options
      */
-    TouchSync.prototype.getOptions = function getOptions() {
+    getOptions() {
         return this.options;
-    };
-
-    module.exports = TouchSync;
-});
+    }
+}

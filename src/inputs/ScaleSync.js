@@ -1,14 +1,17 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
-define(function(require, exports, module) {
-    var TwoFingerSync = require('./TwoFingerSync');
-    var OptionsManager = require('../core/OptionsManager');
+
+ import OptionsManager from '../core/OptionsManager.js';
+ import TwoFingerSync from './TwoFingerSync.js';
+
+export default class ScaleSync extends TwoFingerSync {
 
     /**
      * Handles piped in two-finger touch events to increase or decrease scale via pinching / expanding.
@@ -21,8 +24,8 @@ define(function(require, exports, module) {
      * @param {Object} options default options overrides
      * @param {Number} [options.scale] scale velocity by this factor
      */
-    function ScaleSync(options) {
-        TwoFingerSync.call(this);
+    constructor(options) {
+        super();
 
         this.options = Object.create(ScaleSync.DEFAULT_OPTIONS);
         this._optionsManager = new OptionsManager(this.options);
@@ -30,23 +33,20 @@ define(function(require, exports, module) {
 
         this._scaleFactor = 1;
         this._startDist = 0;
-        this._eventInput.on('pipe', _reset.bind(this));
+        this._eventInput.on('pipe', this._reset());
     }
 
-    ScaleSync.prototype = Object.create(TwoFingerSync.prototype);
-    ScaleSync.prototype.constructor = ScaleSync;
-
-    ScaleSync.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
         scale : 1
-    };
+    }
 
-    function _reset() {
+    _reset() {
         this.touchAId = undefined;
         this.touchBId = undefined;
     }
 
     // handles initial touch of two fingers
-    ScaleSync.prototype._startUpdate = function _startUpdate(event) {
+    _startUpdate(event) {
         this._scaleFactor = 1;
         this._startDist = TwoFingerSync.calculateDistance(this.posA, this.posB);
         this._eventOutput.emit('start', {
@@ -55,10 +55,10 @@ define(function(require, exports, module) {
             distance: this._startDist,
             center: TwoFingerSync.calculateCenter(this.posA, this.posB)
         });
-    };
+    }
 
     // handles movement of two fingers
-    ScaleSync.prototype._moveUpdate = function _moveUpdate(diffTime) {
+    _moveUpdate(diffTime) {
         var scale = this.options.scale;
 
         var currDist = TwoFingerSync.calculateDistance(this.posA, this.posB);
@@ -78,7 +78,7 @@ define(function(require, exports, module) {
         });
 
         this._scaleFactor = newScaleFactor;
-    };
+    }
 
     /**
      * Return entire options dictionary, including defaults.
@@ -86,9 +86,9 @@ define(function(require, exports, module) {
      * @method getOptions
      * @return {Object} configuration options
      */
-    ScaleSync.prototype.getOptions = function getOptions() {
+    getOptions() {
         return this.options;
-    };
+    }
 
     /**
      * Set internal options, overriding any default options
@@ -98,9 +98,7 @@ define(function(require, exports, module) {
      * @param {Object} [options] overrides of default options
      * @param {Number} [options.scale] scale velocity by this factor
      */
-    ScaleSync.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         return this._optionsManager.setOptions(options);
-    };
-
-    module.exports = ScaleSync;
-});
+    }
+}

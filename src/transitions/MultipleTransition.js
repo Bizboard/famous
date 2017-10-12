@@ -1,15 +1,17 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
-/*eslint-disable new-cap */
-define(function(require, exports, module) {
-    var Utility = require('../utilities/Utility');
 
+import Utility from '../utilities/Utility.js';
+
+/*eslint-disable new-cap */
+export default class MultipleTransition {
     /**
      * Transition meta-method to support transitioning multiple
      *   values with scalar-only methods.
@@ -20,13 +22,13 @@ define(function(require, exports, module) {
      *
      * @param {Object} method Transionable class to multiplex
      */
-    function MultipleTransition(method) {
+    constructor(method) {
         this.method = method;
         this._instances = [];
         this.state = [];
     }
 
-    MultipleTransition.SUPPORTS_MULTIPLE = true;
+    static SUPPORTS_MULTIPLE = true;
 
     /**
      * Get the state of each transition.
@@ -35,12 +37,12 @@ define(function(require, exports, module) {
      *
      * @return state {Number|Array} state array
      */
-    MultipleTransition.prototype.get = function get() {
+    get() {
         for (var i = 0; i < this._instances.length; i++) {
             this.state[i] = this._instances[i].get();
         }
         return this.state;
-    };
+    }
 
     /**
      * Set the end states with a shared transition, with optional callback.
@@ -51,13 +53,13 @@ define(function(require, exports, module) {
      * @param {Object} transition Transition definition, shared among all instances
      * @param {Function} callback called when all endStates have been reached.
      */
-    MultipleTransition.prototype.set = function set(endState, transition, callback) {
+    set(endState, transition, callback) {
         var _allCallback = Utility.after(endState.length, callback);
         for (var i = 0; i < endState.length; i++) {
             if (!this._instances[i]) this._instances[i] = new (this.method)();
             this._instances[i].set(endState[i], transition, _allCallback);
         }
-    };
+    }
 
     /**
      * Reset all transitions to start state.
@@ -66,12 +68,10 @@ define(function(require, exports, module) {
      *
      * @param  {Number|Array} startState Start state
      */
-    MultipleTransition.prototype.reset = function reset(startState) {
+    reset(startState) {
         for (var i = 0; i < startState.length; i++) {
             if (!this._instances[i]) this._instances[i] = new (this.method)();
             this._instances[i].reset(startState[i]);
         }
-    };
-
-    module.exports = MultipleTransition;
-});
+    }
+}

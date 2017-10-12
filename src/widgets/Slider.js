@@ -1,33 +1,34 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Surface = require('../core/Surface');
-    var CanvasSurface = require('../surfaces/CanvasSurface');
-    var Transform = require('../core/Transform');
-    var EventHandler = require('../core/EventHandler');
-    var Utilities = require('../math/Utilities');
-    var OptionsManager = require('../core/OptionsManager');
+import Surface from '../core/Surface.js';
+import CanvasSurface from '../surfaces/CanvasSurface.js';
+import EventHandler from '../core/EventHandler.js';
+import Transform from '../core/Transform.js';
+import Utilities from '../math/Utilities.js';
+import OptionsManager from '../core/OptionsManager.js';
 
-    var MouseSync = require('../inputs/MouseSync');
-    var TouchSync = require('../inputs/TouchSync');
-    var GenericSync = require('../inputs/GenericSync');
+import MouseSync from '../inputs/MouseSync.js';
+import TouchSync from '../inputs/TouchSync.js';
+import GenericSync from '../inputs/GenericSync.js';
 
-    GenericSync.register({
-        mouse : MouseSync,
-        touch : TouchSync
-    });
 
-    Slider.with = Surface.with;
+GenericSync.register({
+  mouse : MouseSync,
+  touch : TouchSync
+});
+
+export default class Slider {
 
     /** @constructor */
-    function Slider(options) {
+    constructor(options) {
         this.options = Object.create(Slider.DEFAULT_OPTIONS);
         this.optionsManager = new OptionsManager(this.options);
         if (options) this.setOptions(options);
@@ -49,7 +50,7 @@ define(function(require, exports, module) {
         EventHandler.setInputHandler(this, this.eventInput);
         EventHandler.setOutputHandler(this, this.eventOutput);
 
-        var scale = (this.options.range[1] - this.options.range[0]) / this.options.indicatorSize[0];
+        let scale = (this.options.range[1] - this.options.range[0]) / this.options.indicatorSize[0];
 
         this.sync = new GenericSync(
             ['mouse', 'touch'],
@@ -67,10 +68,14 @@ define(function(require, exports, module) {
         }.bind(this));
 
         this._drawPos = 0;
-        _updateLabel.call(this);
+        this._updateLabel();
     }
 
-    Slider.DEFAULT_OPTIONS = {
+    static with() {
+      return Surface.with(...arguments);
+    }
+
+    static DEFAULT_OPTIONS = {
         size: [200, 60],
         indicatorSize: [200, 30],
         labelSize: [200, 30],
@@ -79,40 +84,40 @@ define(function(require, exports, module) {
         value: 0,
         label: '',
         fillColor: 'rgba(170, 170, 170, 1)'
-    };
+    }
 
-    function _updateLabel() {
+    _updateLabel() {
         this.label.setContent(this.options.label + '<span style="float: right">' + this.get().toFixed(this.options.precision) + '</span>');
     }
 
-    Slider.prototype.setOptions = function setOptions(options) {
+    setOptions(options) {
         return this.optionsManager.setOptions(options);
-    };
+    }
 
-    Slider.prototype.get = function get() {
+    get() {
         return this.options.value;
-    };
+    }
 
-    Slider.prototype.set = function set(value) {
+    set(value) {
         if (value === this.options.value) return;
         this.options.value = Utilities.clamp(value, this.options.range);
         _updateLabel.call(this);
         this.eventOutput.emit('change', {value: value});
-    };
+    }
 
-    Slider.prototype.getSize = function getSize() {
+    getSize() {
         return this.options.size;
-    };
+    }
 
-    Slider.prototype.render = function render() {
-        var range = this.options.range;
-        var fillSize = Math.floor(((this.get() - range[0]) / (range[1] - range[0])) * this.options.indicatorSize[0]);
+    render() {
+        let range = this.options.range;
+        let fillSize = Math.floor(((this.get() - range[0]) / (range[1] - range[0])) * this.options.indicatorSize[0]);
 
         if (fillSize < this._drawPos) {
             this.indicator.getContext('2d').clearRect(fillSize, 0, this._drawPos - fillSize + 1, this.options.indicatorSize[1]);
         }
         else if (fillSize > this._drawPos) {
-            var ctx = this.indicator.getContext('2d');
+            let ctx = this.indicator.getContext('2d');
             ctx.fillStyle = this.options.fillColor;
             ctx.fillRect(this._drawPos-1, 0, fillSize - this._drawPos+1, this.options.indicatorSize[1]);
         }
@@ -132,7 +137,5 @@ define(function(require, exports, module) {
                 }
             ]
         };
-    };
-
-    module.exports = Slider;
-});
+    }
+}

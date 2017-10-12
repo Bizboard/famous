@@ -1,18 +1,19 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Scene = require('../core/Scene');
-    var Surface = require('../core/Surface');
-    var Transform = require('../core/Transform');
-    var View = require('../core/View');
+import Scene from '../core/Scene.js';
+import Surface from '../core/Surface.js';
+import Transform from '../core/Transform.js';
+import View from '../core/View.js';
 
+export default class NavigationBar extends View {
     /**
      * A view for displaying the title of the current page
      *  as well as icons for navigating backwards and opening
@@ -31,8 +32,8 @@ define(function(require, exports, module) {
      * @param {Array.string} [options.classes=(more)] CSS Classes attached to the More surface.
      * @param {String} [options.moreContent=(&#x271a;)] Content of the more button.
      */
-    function NavigationBar(options) {
-        View.apply(this, arguments);
+    constructor(options) {
+        super(...arguments);
 
         this.title = new Surface({
             classes: this.options.classes,
@@ -44,18 +45,18 @@ define(function(require, exports, module) {
             classes: this.options.classes,
             content: this.options.backContent
         });
-        this.back.on('click', function() {
+        this.back.on('click', ()=> {
             this._eventOutput.emit('back', {});
-        }.bind(this));
+        });
 
         this.more = new Surface({
             size: [this.options.size[1], this.options.size[1]],
             classes: this.options.classes,
             content: this.options.moreContent
         });
-        this.more.on('click', function() {
+        this.more.on('click', ()=> {
             this._eventOutput.emit('more', {});
-        }.bind(this));
+        });
 
         this.layout = new Scene({
             id: 'master',
@@ -83,9 +84,9 @@ define(function(require, exports, module) {
 
         this._add(this.layout);
 
-        this._optionsManager.on('change', function(event) {
-            var key = event.id;
-            var data = event.value;
+        this._optionsManager.on('change', (event) => {
+            let key = event.id;
+            let data = event.value;
             if (key === 'size') {
                 this.layout.id.master.setSize(data);
                 this.title.setSize(data);
@@ -112,13 +113,11 @@ define(function(require, exports, module) {
             else if (key === 'moreContent') {
                 this.more.setContent(this.options.content);
             }
-        }.bind(this));
+        });
     }
 
-    NavigationBar.prototype = Object.create(View.prototype);
-    NavigationBar.prototype.constructor = NavigationBar;
 
-    NavigationBar.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
         size: [undefined, 50],
         backClasses: ['back'],
         backContent: '&#x25c0;',
@@ -126,7 +125,7 @@ define(function(require, exports, module) {
         content: '',
         moreClasses: ['more'],
         moreContent: '&#x271a;'
-    };
+    }
 
     /**
      * Set the title of the NavigationBar
@@ -137,9 +136,7 @@ define(function(require, exports, module) {
      *
      * @return {undefined}
      */
-    NavigationBar.prototype.setContent = function setContent(content) {
+    setContent(content) {
         return this.title.setContent(content);
-    };
-
-    module.exports = NavigationBar;
-});
+    }
+}

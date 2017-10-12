@@ -1,19 +1,21 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: felix@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Modifier = require('../core/Modifier');
-    var RenderNode = require('../core/RenderNode');
-    var Transform = require('../core/Transform');
-    var Transitionable = require('../transitions/Transitionable');
-    var View = require('../core/View');
 
+import Modifier from '../core/Modifier.js';
+import RenderNode from '../core/RenderNode.js';
+import Transform from '../core/Transform.js';
+import Transitionable from '../transitions/Transitionable.js';
+import View from '../core/View.js';
+
+export default class RenderController extends View {
     /**
      * A dynamic view that can show or hide different renderables with transitions.
      * @class RenderController
@@ -27,7 +29,7 @@ define(function(require, exports, module) {
        or synchronously beforehand.
      */
     function RenderController(options) {
-        View.apply(this, arguments);
+        super(...arguments);
 
         this._showing = -1;
         this._outgoingRenderables = [];
@@ -49,16 +51,14 @@ define(function(require, exports, module) {
 
         this._output = [];
     }
-    RenderController.prototype = Object.create(View.prototype);
-    RenderController.prototype.constructor = RenderController;
 
-    RenderController.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
         inTransition: true,
         outTransition: true,
         overlap: true
-    };
+    }
 
-    RenderController.DefaultMap = {
+    static DefaultMap = {
         transform: function() {
             return Transform.identity;
         },
@@ -67,9 +67,9 @@ define(function(require, exports, module) {
         },
         origin: null,
         align: null
-    };
+    }
 
-    function _mappedState(map, state) {
+    static _mappedState(map, state) {
         return map(state.get());
     }
 
@@ -85,13 +85,13 @@ define(function(require, exports, module) {
      * a transitionable that manages a full transform (a sixteen value array).
      * @chainable
      */
-    RenderController.prototype.inTransformFrom = function inTransformFrom(transform) {
+    inTransformFrom(transform) {
         if (transform instanceof Function) this.inTransformMap = transform;
         else if (transform && transform.get) this.inTransformMap = transform.get.bind(transform);
         else throw new Error('inTransformFrom takes only function or getter object');
         //TODO: tween transition
         return this;
-    };
+    }
 
     /**
      * inOpacityFrom sets the accessor for the state of the opacity used in transitioning in renderables.
@@ -100,13 +100,13 @@ define(function(require, exports, module) {
      * a transitionable that manages opacity (a number between zero and one).
      * @chainable
      */
-    RenderController.prototype.inOpacityFrom = function inOpacityFrom(opacity) {
+    inOpacityFrom(opacity) {
         if (opacity instanceof Function) this.inOpacityMap = opacity;
         else if (opacity && opacity.get) this.inOpacityMap = opacity.get.bind(opacity);
         else throw new Error('inOpacityFrom takes only function or getter object');
         //TODO: tween opacity
         return this;
-    };
+    }
 
     /**
      * inOriginFrom sets the accessor for the state of the origin used in transitioning in renderables.
@@ -115,13 +115,13 @@ define(function(require, exports, module) {
      * a transitionable that manages origin (a two value array of numbers between zero and one).
      * @chainable
      */
-    RenderController.prototype.inOriginFrom = function inOriginFrom(origin) {
+    inOriginFrom(origin) {
         if (origin instanceof Function) this.inOriginMap = origin;
         else if (origin && origin.get) this.inOriginMap = origin.get.bind(origin);
         else throw new Error('inOriginFrom takes only function or getter object');
         //TODO: tween origin
         return this;
-    };
+    }
 
     /**
      * inAlignFrom sets the accessor for the state of the align used in transitioning in renderables.
@@ -130,13 +130,13 @@ define(function(require, exports, module) {
      * a transitionable that manages align (a two value array of numbers between zero and one).
      * @chainable
      */
-    RenderController.prototype.inAlignFrom = function inAlignFrom(align) {
+    inAlignFrom(align) {
         if (align instanceof Function) this.inAlignMap = align;
         else if (align && align.get) this.inAlignMap = align.get.bind(align);
         else throw new Error('inAlignFrom takes only function or getter object');
         //TODO: tween align
         return this;
-    };
+    }
 
     /**
      * outTransformFrom sets the accessor for the state of the transform used in transitioning out renderables.
@@ -145,13 +145,13 @@ define(function(require, exports, module) {
      * a transitionable that manages a full transform (a sixteen value array).
      * @chainable
      */
-    RenderController.prototype.outTransformFrom = function outTransformFrom(transform) {
+    outTransformFrom(transform) {
         if (transform instanceof Function) this.outTransformMap = transform;
         else if (transform && transform.get) this.outTransformMap = transform.get.bind(transform);
         else throw new Error('outTransformFrom takes only function or getter object');
         //TODO: tween transition
         return this;
-    };
+    }
 
     /**
      * outOpacityFrom sets the accessor for the state of the opacity used in transitioning out renderables.
@@ -160,13 +160,13 @@ define(function(require, exports, module) {
      * a transitionable that manages opacity (a number between zero and one).
      * @chainable
      */
-    RenderController.prototype.outOpacityFrom = function outOpacityFrom(opacity) {
+    outOpacityFrom(opacity) {
         if (opacity instanceof Function) this.outOpacityMap = opacity;
         else if (opacity && opacity.get) this.outOpacityMap = opacity.get.bind(opacity);
         else throw new Error('outOpacityFrom takes only function or getter object');
         //TODO: tween opacity
         return this;
-    };
+    }
 
     /**
      * outOriginFrom sets the accessor for the state of the origin used in transitioning out renderables.
@@ -175,13 +175,13 @@ define(function(require, exports, module) {
      * a transitionable that manages origin (a two value array of numbers between zero and one).
      * @chainable
      */
-    RenderController.prototype.outOriginFrom = function outOriginFrom(origin) {
+    outOriginFrom(origin) {
         if (origin instanceof Function) this.outOriginMap = origin;
         else if (origin && origin.get) this.outOriginMap = origin.get.bind(origin);
         else throw new Error('outOriginFrom takes only function or getter object');
         //TODO: tween origin
         return this;
-    };
+    }
 
     /**
      * outAlignFrom sets the accessor for the state of the align used in transitioning out renderables.
@@ -190,13 +190,13 @@ define(function(require, exports, module) {
      * a transitionable that manages align (a two value array of numbers between zero and one).
      * @chainable
      */
-    RenderController.prototype.outAlignFrom = function outAlignFrom(align) {
+    outAlignFrom(align) {
         if (align instanceof Function) this.outAlignMap = align;
         else if (align && align.get) this.outAlignMap = align.get.bind(align);
         else throw new Error('outAlignFrom takes only function or getter object');
         //TODO: tween align
         return this;
-    };
+    }
 
     /**
      * Show displays the targeted renderable with a transition and an optional callback to
@@ -208,7 +208,7 @@ define(function(require, exports, module) {
      * @param {function} [callback] Executes after transitioning in the renderable.
      * @chainable
      */
-    RenderController.prototype.show = function show(renderable, transition, callback) {
+    show(renderable, transition, callback) {
         if (!renderable) {
             return this.hide(callback);
         }
@@ -269,7 +269,7 @@ define(function(require, exports, module) {
 
         if (!transition) transition = this.options.inTransition;
         state.set(1, transition, callback);
-    };
+    }
 
     /**
      * Hide hides the currently displayed renderable with an out transition.
@@ -279,7 +279,7 @@ define(function(require, exports, module) {
      * @param {function} [callback] Executes after transitioning out the renderable.
      * @chainable
      */
-    RenderController.prototype.hide = function hide(transition, callback) {
+    hide(transition, callback) {
         if (this._showing < 0) return;
         var index = this._showing;
         this._showing = -1;
@@ -316,7 +316,7 @@ define(function(require, exports, module) {
             }
             if (callback) callback.call(this);
         }.bind(this, node, modifier, state, renderable));
-    };
+    }
 
     /**
      * Generate a render spec from the contents of this component.
@@ -325,14 +325,12 @@ define(function(require, exports, module) {
      * @method render
      * @return {number} Render spec for this component
      */
-    RenderController.prototype.render = function render() {
+    render() {
         var result = this._output;
         if (result.length > this._nodes.length) result.splice(this._nodes.length);
         for (var i = 0; i < this._nodes.length; i++) {
             result[i] = this._nodes[i].render();
         }
         return result;
-    };
-
-    module.exports = RenderController;
-});
+    }
+}

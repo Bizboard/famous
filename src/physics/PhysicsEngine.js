@@ -1,12 +1,16 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
-define(function(require, exports, module) {
-    var EventHandler = require('../core/EventHandler');
+
+import EventHandler from '../core/EventHandler.js';
+
+export default class PhysicsEngine {
 
     /**
      * The Physics Engine is responsible for mediating bodies with their
@@ -22,7 +26,7 @@ define(function(require, exports, module) {
      * @constructor
      * @param options {Object} options
      */
-    function PhysicsEngine(options) {
+    constructor(options) {
         this.options = Object.create(PhysicsEngine.DEFAULT_OPTIONS);
         if (options) this.setOptions(options);
 
@@ -33,7 +37,7 @@ define(function(require, exports, module) {
         this._constraints    = [];   //list of Ids of agents that are constraints
 
         this._buffer         = 0.0;
-        this._prevTime       = now();
+        this._prevTime       = Date.now();
         this._isSleeping     = false;
         this._eventHandler   = null;
         this._currAgentId    = 0;
@@ -42,14 +46,12 @@ define(function(require, exports, module) {
     }
 
     /** const */
-    var TIMESTEP = 17;
-    var MIN_TIME_STEP = 1000 / 120;
-    var MAX_TIME_STEP = 17;
-
-    var now = Date.now;
+    static TIMESTEP = 17;
+    static MIN_TIME_STEP = 1000 / 120;
+    static MAX_TIME_STEP = 17;
 
     // Catalogue of outputted events
-    var _events = {
+    static _events = {
         start : 'start',
         update : 'update',
         end : 'end'
@@ -61,7 +63,7 @@ define(function(require, exports, module) {
      * @protected
      * @static
      */
-    PhysicsEngine.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
 
         /**
          * The number of iterations the engine takes to resolve constraints
@@ -100,9 +102,9 @@ define(function(require, exports, module) {
      * @method setOptions
      * @param opts {Object}
      */
-    PhysicsEngine.prototype.setOptions = function setOptions(opts) {
+    setOptions(opts) {
         for (var key in opts) if (this.options[key]) this.options[key] = opts[key];
-    };
+    }
 
     /**
      * Method to add a physics body to the engine. Necessary to update the
@@ -112,7 +114,7 @@ define(function(require, exports, module) {
      * @param body {Body}
      * @return body {Body}
      */
-    PhysicsEngine.prototype.addBody = function addBody(body) {
+    addBody(body) {
         body._engine = this;
         if (body.isBody) {
             this._bodies.push(body);
@@ -121,7 +123,7 @@ define(function(require, exports, module) {
         else this._particles.push(body);
         body.on('start', this.wake.bind(this));
         return body;
-    };
+    }
 
     /**
      * Remove a body from the engine. Detaches body from all forces and
@@ -132,7 +134,7 @@ define(function(require, exports, module) {
      * @method removeBody
      * @param body {Body}
      */
-    PhysicsEngine.prototype.removeBody = function removeBody(body) {
+    removeBody(body) {
         var array = (body.isBody) ? this._bodies : this._particles;
         var index = array.indexOf(body);
         if (index > -1) {
@@ -144,18 +146,18 @@ define(function(require, exports, module) {
             array.splice(index,1);
         }
         if (this.getBodies().length === 0) this._hasBodies = false;
-    };
+    }
 
-    function _mapAgentArray(agent) {
+    _mapAgentArray(agent) {
         if (agent.applyForce)      return this._forces;
         if (agent.applyConstraint) return this._constraints;
     }
 
-    function _attachOne(agent, targets, source) {
+    _attachOne(agent, targets, source) {
         if (targets === undefined) targets = this.getParticlesAndBodies();
         if (!(targets instanceof Array)) targets = [targets];
 
-        agent.on('change', this.wake.bind(this));
+        agent.on('change', this.wake);
 
         this._agentData[this._currAgentId] = {
             agent   : agent,
@@ -164,7 +166,7 @@ define(function(require, exports, module) {
             source  : source
         };
 
-        _mapAgentArray.call(this, agent).push(this._currAgentId);
+        this._mapAgentArray(agent).push(this._currAgentId);
         return this._currAgentId++;
     }
 
@@ -178,17 +180,17 @@ define(function(require, exports, module) {
      * @param [source] {Body} The source of the agent
      * @return AgentId {Number}
      */
-    PhysicsEngine.prototype.attach = function attach(agents, targets, source) {
+    attach(agents, targets, source) {
         this.wake();
 
         if (agents instanceof Array) {
             var agentIDs = [];
             for (var i = 0; i < agents.length; i++)
-                agentIDs[i] = _attachOne.call(this, agents[i], targets, source);
+                agentIDs[i] = this._attachOne(agents[i], targets, source);
             return agentIDs;
         }
-        else return _attachOne.call(this, agents, targets, source);
-    };
+        else return this._attachOne(agents, targets, source);
+    }
 
     /**
      * Append a body to the targets of a previously defined physics agent.
@@ -197,9 +199,9 @@ define(function(require, exports, module) {
      * @param agentID {AgentId} The agentId of a previously defined agent
      * @param target {Body} The Body affected by the agent
      */
-    PhysicsEngine.prototype.attachTo = function attachTo(agentID, target) {
-        _getAgentData.call(this, agentID).targets.push(target);
-    };
+    attachTo(agentID, target) {
+        this._getAgentData(agentID).targets.push(target);
+    }
 
     /**
      * Undoes PhysicsEngine.attach. Removes an agent and its associated
@@ -208,16 +210,16 @@ define(function(require, exports, module) {
      * @method detach
      * @param id {AgentId} The agentId of a previously defined agent
      */
-    PhysicsEngine.prototype.detach = function detach(id) {
+    detach(id) {
         // detach from forces/constraints array
         var agent = this.getAgent(id);
-        var agentArray = _mapAgentArray.call(this, agent);
+        var agentArray = this._mapAgentArray(agent);
         var index = agentArray.indexOf(id);
         agentArray.splice(index,1);
 
         // detach agents array
         delete this._agentData[id];
-    };
+    }
 
     /**
      * Remove a single Body from a previously defined agent.
@@ -226,15 +228,15 @@ define(function(require, exports, module) {
      * @param id {AgentId} The agentId of a previously defined agent
      * @param target {Body} The body to remove from the agent
      */
-    PhysicsEngine.prototype.detachFrom = function detachFrom(id, target) {
-        var boundAgent = _getAgentData.call(this, id);
+    detachFrom(id, target) {
+        var boundAgent = this._getAgentData(id);
         if (boundAgent.source === target) this.detach(id);
         else {
             var targets = boundAgent.targets;
             var index = targets.indexOf(target);
             if (index > -1) targets.splice(index,1);
         }
-    };
+    }
 
     /**
      * A convenience method to give the Physics Engine a clean slate of
@@ -242,12 +244,12 @@ define(function(require, exports, module) {
      *
      * @method detachAll
      */
-    PhysicsEngine.prototype.detachAll = function detachAll() {
+    detachAll() {
         this._agentData     = {};
         this._forces        = [];
         this._constraints   = [];
         this._currAgentId   = 0;
-    };
+    }
 
     function _getAgentData(id) {
         return this._agentData[id];
@@ -259,9 +261,9 @@ define(function(require, exports, module) {
      * @method getAgent
      * @param id {AgentId}
      */
-    PhysicsEngine.prototype.getAgent = function getAgent(id) {
-        return _getAgentData.call(this, id).agent;
-    };
+    getAgent(id) {
+        return this._getAgentData(id).agent;
+    }
 
     /**
      * Returns all particles that are currently managed by the Physics Engine.
@@ -269,9 +271,9 @@ define(function(require, exports, module) {
      * @method getParticles
      * @return particles {Array.Particles}
      */
-    PhysicsEngine.prototype.getParticles = function getParticles() {
+    getParticles() {
         return this._particles;
-    };
+    }
 
     /**
      * Returns all bodies, except particles, that are currently managed by the Physics Engine.
@@ -279,9 +281,9 @@ define(function(require, exports, module) {
      * @method getBodies
      * @return bodies {Array.Bodies}
      */
-    PhysicsEngine.prototype.getBodies = function getBodies() {
+    getBodies() {
         return this._bodies;
-    };
+    }
 
     /**
      * Returns all bodies that are currently managed by the Physics Engine.
@@ -289,9 +291,9 @@ define(function(require, exports, module) {
      * @method getBodies
      * @return bodies {Array.Bodies}
      */
-    PhysicsEngine.prototype.getParticlesAndBodies = function getParticlesAndBodies() {
+    getParticlesAndBodies() {
         return this.getParticles().concat(this.getBodies());
-    };
+    }
 
     /**
      * Iterates over every Particle and applies a function whose first
@@ -301,11 +303,11 @@ define(function(require, exports, module) {
      * @param fn {Function} Function to iterate over
      * @param [dt] {Number} Delta time
      */
-    PhysicsEngine.prototype.forEachParticle = function forEachParticle(fn, dt) {
+    forEachParticle(fn, dt) {
         var particles = this.getParticles();
         for (var index = 0, len = particles.length; index < len; index++)
             fn.call(this, particles[index], dt);
-    };
+    }
 
     /**
      * Iterates over every Body that isn't a Particle and applies
@@ -315,12 +317,12 @@ define(function(require, exports, module) {
      * @param fn {Function} Function to iterate over
      * @param [dt] {Number} Delta time
      */
-    PhysicsEngine.prototype.forEachBody = function forEachBody(fn, dt) {
+    forEachBody(fn, dt) {
         if (!this._hasBodies) return;
         var bodies = this.getBodies();
         for (var index = 0, len = bodies.length; index < len; index++)
             fn.call(this, bodies[index], dt);
-    };
+    }
 
     /**
      * Iterates over every Body and applies a function whose first
@@ -330,10 +332,10 @@ define(function(require, exports, module) {
      * @param fn {Function} Function to iterate over
      * @param [dt] {Number} Delta time
      */
-    PhysicsEngine.prototype.forEach = function forEach(fn, dt) {
+    forEach(fn, dt) {
         this.forEachParticle(fn, dt);
         this.forEachBody(fn, dt);
-    };
+    }
 
     function _updateForce(index) {
         var boundAgent = _getAgentData.call(this, this._forces[index]);
@@ -342,7 +344,7 @@ define(function(require, exports, module) {
 
     function _updateForces() {
         for (var index = this._forces.length - 1; index > -1; index--)
-            _updateForce.call(this, index);
+            this._updateForce(index);
     }
 
     function _updateConstraint(index, dt) {
@@ -354,7 +356,7 @@ define(function(require, exports, module) {
         var iteration = 0;
         while (iteration < this.options.constraintSteps) {
             for (var index = this._constraints.length - 1; index > -1; index--)
-                _updateConstraint.call(this, index, dt);
+                this._updateConstraint(index, dt);
             iteration++;
         }
     }
@@ -382,10 +384,10 @@ define(function(require, exports, module) {
     }
 
     function _integrate(dt) {
-        _updateForces.call(this, dt);
+        this._updateForces(dt);
         this.forEach(_updateVelocities, dt);
         this.forEachBody(_updateAngularVelocities, dt);
-        _updateConstraints.call(this, dt);
+        this._updateConstraints(dt);
         this.forEachBody(_updateOrientations, dt);
         this.forEach(_updatePositions, dt);
     }
@@ -414,10 +416,10 @@ define(function(require, exports, module) {
      * @param agentId {Number} The attached agent Id
      * @return energy {Number}
      */
-    PhysicsEngine.prototype.getAgentEnergy = function(agentId) {
-        var agentData = _getAgentData.call(this, agentId);
+    getAgentEnergy(agentId) {
+        var agentData = this._getAgentData(agentId);
         return agentData.agent.getEnergy(agentData.targets, agentData.source);
-    };
+    }
 
     /**
      * Calculates the kinetic energy of all Body objects and potential energy
@@ -427,9 +429,9 @@ define(function(require, exports, module) {
      * @method getEnergy
      * @return energy {Number}
      */
-    PhysicsEngine.prototype.getEnergy = function getEnergy() {
-        return _getParticlesEnergy.call(this) + _getAgentsEnergy.call(this);
-    };
+    getEnergy() {
+        return this._getParticlesEnergy() + this._getAgentsEnergy();
+    }
 
     /**
      * Updates all Body objects managed by the physics engine over the
@@ -437,11 +439,11 @@ define(function(require, exports, module) {
      *
      * @method step
      */
-    PhysicsEngine.prototype.step = function step() {
+    step() {
         if (this.isSleeping()) return;
 
         //set current frame's time
-        var currTime = now();
+        var currTime = Date.now();
 
         //milliseconds elapsed since last frame
         var dtFrame = currTime - this._prevTime;
@@ -465,7 +467,7 @@ define(function(require, exports, module) {
         this.emit(_events.update, this);
 
         if (this.getEnergy() < this.options.sleepTolerance) this.sleep();
-    };
+    }
 
     /**
      * Tells whether the Physics Engine is sleeping or awake.
@@ -473,9 +475,9 @@ define(function(require, exports, module) {
      * @method isSleeping
      * @return {Boolean}
      */
-    PhysicsEngine.prototype.isSleeping = function isSleeping() {
+    isSleeping() {
         return this._isSleeping;
-    };
+    }
 
     /**
      * Tells whether the Physics Engine is sleeping or awake.
@@ -483,45 +485,43 @@ define(function(require, exports, module) {
      * @method isActive
      * @return {Boolean}
      */
-    PhysicsEngine.prototype.isActive = function isSleeping() {
+    isActive() {
         return !this._isSleeping;
-    };
+    }
 
     /**
      * Stops the Physics Engine update loop. Emits an 'end' event.
      *
      * @method sleep
      */
-    PhysicsEngine.prototype.sleep = function sleep() {
+    sleep() {
         if (this._isSleeping) return;
         this.forEach(function(body) {
             body.sleep();
         });
         this.emit(_events.end, this);
         this._isSleeping = true;
-    };
+    }
 
     /**
      * Restarts the Physics Engine update loop. Emits an 'start' event.
      *
      * @method wake
      */
-    PhysicsEngine.prototype.wake = function wake() {
+    wake() {
         if (!this._isSleeping) return;
-        this._prevTime = now();
+        this._prevTime = Date.now();
         this.emit(_events.start, this);
         this._isSleeping = false;
-    };
+    }
 
-    PhysicsEngine.prototype.emit = function emit(type, data) {
+    emit(type, data) {
         if (this._eventHandler === null) return;
         this._eventHandler.emit(type, data);
-    };
+    }
 
-    PhysicsEngine.prototype.on = function on(event, fn) {
+    on(event, fn) {
         if (this._eventHandler === null) this._eventHandler = new EventHandler();
         this._eventHandler.on(event, fn);
-    };
-
-    module.exports = PhysicsEngine;
-});
+    }
+}

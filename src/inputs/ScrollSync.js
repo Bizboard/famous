@@ -1,15 +1,18 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
-define(function(require, exports, module) {
-  var EventHandler = require('../core/EventHandler');
-  var Engine = require('../core/Engine');
-  var OptionsManager = require('../core/OptionsManager');
+
+import EventHandler from '../core/EventHandler.js';
+import Engine from '../core/Engine.js';
+import OptionsManager from '../core/OptionsManager.js';
+
+export default class ScrollSync {
 
   /**
    * Handles piped in mousewheel events.
@@ -31,7 +34,7 @@ define(function(require, exports, module) {
    * @param {Number | Array.Number} [options.scale] scale outputs in by scalar or pair of scalars
    * @param {Number} [options.stallTime] reset time for velocity calculation in ms
    */
-  function ScrollSync(options) {
+  constructor(options) {
     this.options = Object.create(ScrollSync.DEFAULT_OPTIONS);
     this._optionsManager = new OptionsManager(this.options);
     if (options) this.setOptions(options);
@@ -52,13 +55,13 @@ define(function(require, exports, module) {
     this._position = (this.options.direction === undefined) ? [0,0] : 0;
     this._prevTime = undefined;
     this._prevVel = undefined;
-    this._eventInput.on('mousewheel', _handleMove.bind(this));
-    this._eventInput.on('wheel', _handleMove.bind(this));
+    this._eventInput.on('mousewheel', this._handleMove);
+    this._eventInput.on('wheel', this._handleMove);
     this._inProgress = false;
     this._loopBound = false;
   }
 
-  ScrollSync.DEFAULT_OPTIONS = {
+  static DEFAULT_OPTIONS = {
     direction: undefined,
     minimumEndSpeed: Infinity,
     swapDirections: false,
@@ -69,22 +72,19 @@ define(function(require, exports, module) {
     preventDefault: false
   };
 
-  ScrollSync.DIRECTION_X = 0;
-  ScrollSync.DIRECTION_Y = 1;
+  static DIRECTION_X = 0;
+  static DIRECTION_Y = 1;
+  static MINIMUM_TICK_TIME = 8;
 
-  var MINIMUM_TICK_TIME = 8;
-
-  var _now = Date.now;
-
-  function _newFrame() {
-    if (this._inProgress && (_now() - this._prevTime) > this.options.stallTime) {
+  _newFrame() {
+    if (this._inProgress && (Date.now() - this._prevTime) > this.options.stallTime) {
       this._inProgress = false;
 
-      var finalVel = (Math.abs(this._prevVel) >= this.options.minimumEndSpeed)
+      let finalVel = (Math.abs(this._prevVel) >= this.options.minimumEndSpeed)
         ? this._prevVel
         : 0;
 
-      var payload = this._payload;
+      let payload = this._payload;
       payload.position = this._position;
       payload.velocity = finalVel;
       payload.slip = true;
@@ -93,7 +93,7 @@ define(function(require, exports, module) {
     }
   }
 
-  function _handleMove(event) {
+  _handleMove(event) {
     if (!this._inProgress) {
       this._inProgress = true;
       this._position = (this.options.direction === undefined) ? [0,0] : 0;
@@ -106,15 +106,15 @@ define(function(require, exports, module) {
       payload.offsetY = event.offsetY;
       this._eventOutput.emit('start', payload);
       if (!this._loopBound) {
-        Engine.on('prerender', _newFrame.bind(this));
+        Engine.on('prerender', this._newFrame);
         this._loopBound = true;
       }
     }
 
-    var currTime = _now();
-    var prevTime = this._prevTime || currTime;
+    let currTime = Date.now();
+    let prevTime = this._prevTime || currTime;
 
-    var diffX, diffY;
+    let diffX, diffY;
 
     if(!event.wheelDeltaX || !event.wheelDeltaY){
       diffX = 0;
@@ -135,14 +135,14 @@ define(function(require, exports, module) {
       else diffX = 0;
     }
 
-    var diffTime = Math.max(currTime - prevTime, MINIMUM_TICK_TIME); // minimum tick time
+    let diffTime = Math.max(currTime - prevTime, MINIMUM_TICK_TIME); // minimum tick time
 
-    var velX = diffX / diffTime;
-    var velY = diffY / diffTime;
+    let velX = diffX / diffTime;
+    let velY = diffY / diffTime;
 
-    var scale = this.options.scale;
-    var nextVel;
-    var nextDelta;
+    let scale = this.options.scale;
+    let nextVel;
+    let nextDelta;
 
     if (this.options.direction === ScrollSync.DIRECTION_X) {
       nextDelta = scale * diffX;
@@ -161,12 +161,12 @@ define(function(require, exports, module) {
       this._position[1] += nextDelta[1];
     }
 
-    var payload = this._payload;
+    let payload = this._payload;
     payload.delta    = nextDelta;
     payload.velocity = nextVel;
     payload.position = this._position;
     if(this.options.swapDirections){
-      var temp = payload.delta[0];
+      let temp = payload.delta[0];
       payload.delta[0] = payload.delta[1];
       payload.delta[1] = temp;
       temp = payload.velocity[0];
@@ -190,9 +190,9 @@ define(function(require, exports, module) {
    * @method getOptions
    * @return {Object} configuration options
    */
-  ScrollSync.prototype.getOptions = function getOptions() {
+  getOptions() {
     return this.options;
-  };
+  }
 
   /**
    * Set internal options, overriding any default options
@@ -207,9 +207,7 @@ define(function(require, exports, module) {
    *    pay attention to one specific direction.
    * @param {Number} [options.scale] constant factor to scale velocity output
    */
-  ScrollSync.prototype.setOptions = function setOptions(options) {
+  setOptions(options) {
     return this._optionsManager.setOptions(options);
-  };
-
-  module.exports = ScrollSync;
-});
+  }
+}

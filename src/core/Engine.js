@@ -1,83 +1,84 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: mark@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function (require, exports, module) {
+import Context            from './Context.js';
+import ElementAllocator   from './ElementAllocator.js';
+import EventHandler       from './EventHandler.js';
+import OptionsManager     from './OptionsManager.js';
+import DOMBuffer          from './DOMBuffer.js';
 
-  /**
-   * The singleton object initiated upon process
-   *   startup which manages all active Context instances, runs
-   *   the render dispatch loop, and acts as a listener and dispatcher
-   *   for events.  All methods are therefore static.
-   *
-   *   On static initialization, window.requestAnimationFrame is called with
-   *     the event loop function.
-   *
-   *   Note: Any window in which Engine runs will prevent default
-   *     scrolling behavior on the 'touchmove' event.
-   *
-   * @static
-   * @class Engine
-   */
-  var Context = require('./Context');
-  var ElementAllocator = require('./ElementAllocator');
-  var EventHandler = require('./EventHandler');
-  var OptionsManager = require('./OptionsManager');
-  var DOMBuffer = require('./DOMBuffer');
+/**
+ * The singleton object initiated upon process
+ *   startup which manages all active Context instances, runs
+ *   the render dispatch loop, and acts as a listener and dispatcher
+ *   for events.  All methods are therefore static.
+ *
+ *   On static initialization, window.requestAnimationFrame is called with
+ *     the event loop function.
+ *
+ *   Note: Any window in which Engine runs will prevent default
+ *     scrolling behavior on the 'touchmove' event.
+ *
+ * @static
+ * @class Engine
+ */
+export default class Engine {
+
+  static isWindowPerformance = (typeof window !== 'undefined' && window.performance && window.performance.now);
 
   /* Precise function for comparing time stamps*/
-  var getTime = (typeof window !== 'undefined' && window.performance && window.performance.now) ?
-    function() {
-      return window.performance.now();
-    }
-    : function() {
-      return Date.now();
-    };
+  static getTime() {
+    return isWindowPerformance?window.performance.now():Date.now();
+  }
 
+  static contexts = [];
 
-  var Engine = {};
+  static nextTickQueue = [];
 
-  var contexts = [];
+  static currentFrame = 0;
+  static nextTickFrame = 0;
 
-  var nextTickQueue = [];
-
-  var currentFrame = 0;
-  var nextTickFrame = 0;
-
-  var deferQueue = [];
+  static deferQueue = [];
 
   /* The last timestamp of the previous frame */
-  var lastTime = getTime();
+  static lastTime = getTime();
 
-  var frameTime;
-  var frameTimeLimit;
-  var loopEnabled = true;
-  var eventForwarders = {};
-  var eventHandler = new EventHandler();
+  static frameTime;
+  static frameTimeLimit;
+  static loopEnabled = true;
+  static eventForwarders = {};
+  static eventHandler = new EventHandler();
 
-  var options = {
+  static initialized = false;
+  static touchMoveEnabled = true;
+  static canvas;
+
+  static options = {
     containerType: 'div',
     containerClass: 'famous-container',
     fpsCap: undefined,
     runLoop: true,
     appMode: true
-  };
-  var optionsManager = new OptionsManager(options);
+  }
+
+  static optionsManager = new OptionsManager(options);
 
   /** @const */
-  var MAX_DEFER_FRAME_TIME = 10;
+  static MAX_DEFER_FRAME_TIME = 10;
 
 
-  Engine.PriorityLevels = {
+  static PriorityLevels = {
     critical: Infinity,
     normal: 130,
     generous: 0
-  };
+  }
 
   /**
    * Inside requestAnimationFrame loop, step() is called, which:
@@ -91,7 +92,7 @@ define(function (require, exports, module) {
    * @private
    * @method step
    */
-  Engine.step = function step() {
+  static step() {
     currentFrame++;
     nextTickFrame = currentFrame;
 
@@ -131,8 +132,7 @@ define(function (require, exports, module) {
 
     eventHandler.emit('postrender');
 
-
-  };
+  }
 
   /**
    * @example
@@ -146,11 +146,11 @@ define(function (require, exports, module) {
    *
    * @param options
    */
-  Engine.restrictAnimations = function disableAnimationsWhen(options) {
+  static restrictAnimations(options) {
     this._disableAnimationSpec = options;
-  };
+  }
 
-  Engine.shouldPropertyAnimate = function shouldPropertyAnimate(propertyName){
+  static shouldPropertyAnimate(propertyName){
     if(!this._disableAnimationSpec){
       return true;
     }
@@ -159,24 +159,11 @@ define(function (require, exports, module) {
       return true;
     }
     return this._priorityLevel < priorityLevel;
-  };
-
-
-  Engine.getFrameTimeDelta = function getFrameTimeDelta() {
-    return this._lastFrameTimeDelta;
-  };
-
-  // engage requestAnimationFrame
-  function loop() {
-    if (options.runLoop) {
-      Engine.step();
-      window.requestAnimationFrame(loop);
-    }
-    else loopEnabled = false;
   }
 
-  if (typeof window !== 'undefined') {
-    window.requestAnimationFrame(loop);
+
+  static getFrameTimeDelta() {
+    return this._lastFrameTimeDelta;
   }
 
   //
@@ -185,28 +172,18 @@ define(function (require, exports, module) {
   //   and for each managed Context: emit the 'resize' event and update its size.
   // @param {Object=} event document event
   //
-  function handleResize(event) {
+  handleResize(event) {
     for (var i = 0; i < contexts.length; i++) {
       contexts[i].emit('resize');
     }
     eventHandler.emit('resize');
   }
 
-  if (typeof window !== 'undefined') {
-
-    window.addEventListener('resize', handleResize, false);
-    handleResize();
-
-    window.addEventListener('resize', handleResize, false);
-    handleResize();
+  static getPriorityLevel() {
+    return this._priorityLevel;
   }
 
-  Engine.touchMoveEnabled = true;
-
-  Engine.getPriorityLevel = function () {
-    return this._priorityLevel;
-  };
-  Engine.disableTouchMove = function disableTouchMove() {
+  static disableTouchMove() {
     if (this.touchMoveEnabled) {
       // prevent scrolling via browser
       window.addEventListener('touchmove', function (event) {
@@ -228,13 +205,11 @@ define(function (require, exports, module) {
    * @private
    * @method initialize
    */
-  function initialize() {
+  static initialize() {
     addRootClasses();
   }
 
-  var initialized = false;
-
-  function addRootClasses() {
+  static addRootClasses() {
     if (!document.body) {
       Engine.nextTick(addRootClasses);
       return;
@@ -244,14 +219,14 @@ define(function (require, exports, module) {
     document.documentElement.classList.add('famous-root');
   }
 
-  var canvas;
-  Engine.getCachedCanvas = function() {
+
+  static getCachedCanvas() {
     if(!canvas){
       canvas = document.createElement('canvas');
       document.createDocumentFragment().appendChild(canvas);
     }
     return canvas;
-  };
+  }
 
   /**
    * Add event handler object to set of downstream handlers.
@@ -261,10 +236,10 @@ define(function (require, exports, module) {
    * @param {EventHandler} target event handler target object
    * @return {EventHandler} passed event handler
    */
-  Engine.pipe = function pipe(target) {
+  static pipe(target) {
     if (target.subscribe instanceof Function) return target.subscribe(Engine);
     else return eventHandler.pipe(target);
-  };
+  }
 
   /**
    * Remove handler object from set of downstream handlers.
@@ -275,7 +250,7 @@ define(function (require, exports, module) {
    * @param {EventHandler} target target handler object
    * @return {EventHandler} provided target
    */
-  Engine.unpipe = function unpipe(target) {
+  static unpipe(target) {
     if (target.unsubscribe instanceof Function) return target.unsubscribe(Engine);
     else return eventHandler.unpipe(target);
   };
@@ -290,7 +265,7 @@ define(function (require, exports, module) {
    * @param {function(string, Object)} handler callback
    * @return {EventHandler} this
    */
-  Engine.on = function on(type, handler) {
+  static on(type, handler) {
     if (!(type in eventForwarders)) {
       eventForwarders[type] = eventHandler.emit.bind(eventHandler, type);
 
@@ -299,7 +274,7 @@ define(function (require, exports, module) {
     return eventHandler.on(type, handler);
   };
 
-  function addEngineListener(type, forwarder) {
+  addEngineListener(type, forwarder) {
     if (!document.body) {
       Engine.nextTick(addEventListener.bind(this, type, forwarder));
       return;
@@ -318,9 +293,9 @@ define(function (require, exports, module) {
    * @param {Object} event event data
    * @return {EventHandler} this
    */
-  Engine.emit = function emit(type, event) {
+  static emit(type, event) {
     return eventHandler.emit(type, event);
-  };
+  }
 
   /**
    * Unbind an event by type and handler.
@@ -333,9 +308,9 @@ define(function (require, exports, module) {
    * @param {function} handler function object to remove
    * @return {EventHandler} internal event handler object (for chaining)
    */
-  Engine.removeListener = function removeListener(type, handler) {
+  static removeListener(type, handler) {
     return eventHandler.removeListener(type, handler);
-  };
+  }
 
   /**
    * Return the current calculated frames per second of the Engine.
@@ -345,9 +320,9 @@ define(function (require, exports, module) {
    *
    * @return {Number} calculated fps
    */
-  Engine.getFPS = function getFPS() {
+  static getFPS() {
     return 1000 / frameTime;
-  };
+  }
 
   /**
    * Set the maximum fps at which the system should run. If internal render
@@ -359,9 +334,9 @@ define(function (require, exports, module) {
    *
    * @param {Number} fps maximum frames per second
    */
-  Engine.setFPSCap = function setFPSCap(fps) {
+  static setFPSCap(fps) {
     frameTimeLimit = Math.floor(1000 / fps);
-  };
+  } //TODO: check for trail
 
   /**
    * Return engine options.
@@ -371,7 +346,7 @@ define(function (require, exports, module) {
    * @param {string} key
    * @return {Object} engine options
    */
-  Engine.getOptions = function getOptions(key) {
+  static getOptions(key) {
     return optionsManager.getOptions(key);
   };
 
@@ -387,7 +362,7 @@ define(function (require, exports, module) {
    * @param {string} [options.containerType="div"] type of container element.  Defaults to 'div'.
    * @param {string} [options.containerClass="famous-container"] type of container element.  Defaults to 'famous-container'.
    */
-  Engine.setOptions = function setOptions(options) {
+  static setOptions(options) {
     return optionsManager.setOptions.apply(optionsManager, arguments);
   };
 
@@ -402,7 +377,7 @@ define(function (require, exports, module) {
    * @param {Node} el will be top of Famo.us document element tree
    * @return {Context} new Context within el
    */
-  Engine.createContext = function createContext(el) {
+  static createContext(el) {
 
     this._priorityLevel = Engine.PriorityLevels.critical;
 
@@ -424,7 +399,7 @@ define(function (require, exports, module) {
     return context;
   };
 
-  function mount(context, el) {
+  mount(context, el) {
     if (!document.body) {
       Engine.nextTick(mount.bind(this, context, el));
       return;
@@ -443,10 +418,10 @@ define(function (require, exports, module) {
    * @param {Context} context Context to register
    * @return {FamousContext} provided context
    */
-  Engine.registerContext = function registerContext(context) {
+  static registerContext(context) {
     contexts.push(context);
     return context;
-  };
+  }
 
   /**
    * Returns a list of all contexts.
@@ -455,9 +430,9 @@ define(function (require, exports, module) {
    * @method getContexts
    * @return {Array} contexts that are updated on each tick
    */
-  Engine.getContexts = function getContexts() {
+  static getContexts() {
     return contexts;
-  };
+  }
 
   /**
    * Removes a context from the run loop. Note: this does not do any
@@ -468,10 +443,10 @@ define(function (require, exports, module) {
    *
    * @param {Context} context Context to deregister
    */
-  Engine.deregisterContext = function deregisterContext(context) {
+  static deregisterContext(context) {
     var i = contexts.indexOf(context);
     if (i >= 0) contexts.splice(i, 1);
-  };
+  }
 
   /**
    * Queue a function to be executed on the next tick of the
@@ -482,11 +457,13 @@ define(function (require, exports, module) {
    *
    * @param {function(Object)} fn function accepting window object
    */
-  Engine.nextTick = function nextTick(fn) {
+  static nextTick(fn) {
     nextTickQueue.push(fn);
-  };
+  }
 
-  Engine.now = getTime;
+  static now() {
+    return getTime(...arguments);
+  }
 
   /**
    * Queue a function to be executed sometime soon, at a time that is
@@ -497,11 +474,31 @@ define(function (require, exports, module) {
    *
    * @param {Function} fn
    */
-  Engine.defer = function defer(fn) {
+  static defer(fn) {
     deferQueue.push(fn);
-  };
+  }
+}
 
-  optionsManager.on('change', function (data) {
+// engage requestAnimationFrame
+function loop() {
+  if (options.runLoop) {
+    Engine.step();
+    window.requestAnimationFrame(loop);
+  }
+  else loopEnabled = false;
+}
+
+if (typeof window !== 'undefined') {
+  window.requestAnimationFrame(loop);
+
+  window.addEventListener('resize', Engine.handleResize, false);
+  Engine.handleResize();
+
+  //window.addEventListener('resize', handleResize, false);
+  //handleResize();
+
+
+  Engine.optionsManager.on('change', function (data) {
     if (data.id === 'fpsCap') Engine.setFPSCap(data.value);
     else if (data.id === 'runLoop') {
       // kick off the loop only if it was stopped
@@ -511,6 +508,4 @@ define(function (require, exports, module) {
       }
     }
   });
-
-  module.exports = Engine;
-});
+}

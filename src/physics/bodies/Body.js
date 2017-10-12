@@ -1,19 +1,22 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* We respect the original MPL-2.0 open-source license with regards to most of this file source-code.
+ * any variations, changes and additions are NPOSL-3 licensed.
  *
- * Owner: david@famo.us
- * @license MPL 2.0
- * @copyright Famous Industries, Inc. 2015
+ * @author Hans van den Akker
+ * @license NPOSL-3.0
+ * @copyright Famous Industries, Inc. 2015, Arva 2015-2017
+ * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
+ * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-define(function(require, exports, module) {
-    var Particle = require('./Particle');
-    var Transform = require('../../core/Transform');
-    var Vector = require('../../math/Vector');
-    var Quaternion = require('../../math/Quaternion');
-    var Matrix = require('../../math/Matrix');
-    var Integrator = require('../integrators/SymplecticEuler');
+import Particle from './Particle.js';
+import Transform from '../../core/Transform.js';
+import Vector from '../../math/Vector.js';
+import Quaternion from '../../math/Quaternion.js';
+import Matrix from '../../math/Matrix.js';
+import Integrator from '../integrators/SymplecticEuler.js';
+import OptionsManager from '../../core/OptionsManager.js';
+
+export default class Body extends Particle {
 
     /**
      * A unit controlled by the physics engine which extends the zero-dimensional
@@ -25,40 +28,38 @@ define(function(require, exports, module) {
      * @extends Particle
      * @constructor
      */
-    function Body(options) {
-        Particle.call(this, options);
-        options = options || {};
+    constructor(options) {
+      super(...arguments);
+      options = options || {};
 
-        this.orientation     = new Quaternion();
-        this.angularVelocity = new Vector();
-        this.angularMomentum = new Vector();
-        this.torque          = new Vector();
+      this.orientation     = new Quaternion();
+      this.angularVelocity = new Vector();
+      this.angularMomentum = new Vector();
+      this.torque          = new Vector();
 
-        if (options.orientation)     this.orientation.set(options.orientation);
-        if (options.angularVelocity) this.angularVelocity.set(options.angularVelocity);
-        if (options.angularMomentum) this.angularMomentum.set(options.angularMomentum);
-        if (options.torque)          this.torque.set(options.torque);
+      if (options.orientation)     this.orientation.set(options.orientation);
+      if (options.angularVelocity) this.angularVelocity.set(options.angularVelocity);
+      if (options.angularMomentum) this.angularMomentum.set(options.angularMomentum);
+      if (options.torque)          this.torque.set(options.torque);
 
-        this.angularVelocity.w = 0;        //quaternify the angular velocity
-        this.setMomentsOfInertia();
+      this.angularVelocity.w = 0;        //quaternify the angular velocity
+      this.setMomentsOfInertia();
 
-        // registers
-        this.pWorld = new Vector();        //placeholder for world space position
+      // registers
+      this.pWorld = new Vector();        //placeholder for world space position
     }
 
-    Body.DEFAULT_OPTIONS = Particle.DEFAULT_OPTIONS;
-    Body.DEFAULT_OPTIONS.orientation = [0, 0, 0, 1];
-    Body.DEFAULT_OPTIONS.angularVelocity = [0, 0, 0];
+    static DEFAULT_OPTIONS = OptionsManager.patch(Particle.DEFAULT_OPTIONS, {
+        orientation = [0, 0, 0, 1],
+        angularVelocity = [0, 0, 0]
+    })
 
-    Body.prototype = Object.create(Particle.prototype);
-    Body.prototype.constructor = Body;
+    static isBody = true;
 
-    Body.prototype.isBody = true;
-
-    Body.prototype.setMass = function setMass() {
-        Particle.prototype.setMass.apply(this, arguments);
-        this.setMomentsOfInertia();
-    };
+    setMass() {
+      super.setMass(...arguments);
+      this.setMomentsOfInertia();
+    }
 
     /**
      * Setter for moment of inertia, which is necessary to give proper
@@ -66,19 +67,19 @@ define(function(require, exports, module) {
      *
      * @method setMomentsOfInertia
      */
-    Body.prototype.setMomentsOfInertia = function setMomentsOfInertia() {
+    setMomentsOfInertia() {
         this.inertia = new Matrix();
         this.inverseInertia = new Matrix();
-    };
+    }
 
     /**
      * Update the angular velocity from the angular momentum state.
      *
      * @method updateAngularVelocity
      */
-    Body.prototype.updateAngularVelocity = function updateAngularVelocity() {
+    updateAngularVelocity() {
         this.angularVelocity.set(this.inverseInertia.vectorMultiply(this.angularMomentum));
-    };
+    }
 
     /**
      * Determine world coordinates from the local coordinate system. Useful
@@ -88,9 +89,9 @@ define(function(require, exports, module) {
      * @param localPosition {Vector} local coordinate vector
      * @return global coordinate vector {Vector}
      */
-    Body.prototype.toWorldCoordinates = function toWorldCoordinates(localPosition) {
+    toWorldCoordinates(localPosition) {
         return this.pWorld.set(this.orientation.rotateVector(localPosition));
-    };
+    }
 
     /**
      * Calculates the kinetic and intertial energy of a body.
@@ -98,10 +99,10 @@ define(function(require, exports, module) {
      * @method getEnergy
      * @return energy {Number}
      */
-    Body.prototype.getEnergy = function getEnergy() {
-        return Particle.prototype.getEnergy.call(this)
+    getEnergy() {
+        return super.getEnergy()
             + 0.5 * this.inertia.vectorMultiply(this.angularVelocity).dot(this.angularVelocity);
-    };
+    }
 
     /**
      * Extends Particle.reset to reset orientation, angular velocity
@@ -113,12 +114,12 @@ define(function(require, exports, module) {
      * @param [q] {Array|Quaternion} orientation
      * @param [L] {Array|Vector} angular momentum
      */
-    Body.prototype.reset = function reset(p, v, q, L) {
-        Particle.prototype.reset.call(this, p, v);
+    reset(p, v, q, L) {
+        super.reset(p, v);
         this.angularVelocity.clear();
         this.setOrientation(q || [1,0,0,0]);
         this.setAngularMomentum(L || [0,0,0]);
-    };
+    }
 
     /**
      * Setter for orientation
@@ -126,9 +127,9 @@ define(function(require, exports, module) {
      * @method setOrientation
      * @param q {Array|Quaternion} orientation
      */
-    Body.prototype.setOrientation = function setOrientation(q) {
+    setOrientation(q) {
         this.orientation.set(q);
-    };
+    }
 
     /**
      * Setter for angular velocity
@@ -136,10 +137,10 @@ define(function(require, exports, module) {
      * @method setAngularVelocity
      * @param w {Array|Vector} angular velocity
      */
-    Body.prototype.setAngularVelocity = function setAngularVelocity(w) {
+    setAngularVelocity(w) {
         this.wake();
         this.angularVelocity.set(w);
-    };
+    }
 
     /**
      * Setter for angular momentum
@@ -147,10 +148,10 @@ define(function(require, exports, module) {
      * @method setAngularMomentum
      * @param L {Array|Vector} angular momentum
      */
-    Body.prototype.setAngularMomentum = function setAngularMomentum(L) {
+    setAngularMomentum(L) {
         this.wake();
         this.angularMomentum.set(L);
-    };
+    }
 
     /**
      * Extends Particle.applyForce with an optional argument
@@ -160,10 +161,10 @@ define(function(require, exports, module) {
      * @param force {Vector} force
      * @param [location] {Vector} off-center location on the body
      */
-    Body.prototype.applyForce = function applyForce(force, location) {
-        Particle.prototype.applyForce.call(this, force);
+    applyForce(force, location) {
+        super.applyForce(force);
         if (location !== undefined) this.applyTorque(location.cross(force));
-    };
+    }
 
     /**
      * Applied a torque force to a body, inducing a rotation.
@@ -171,10 +172,10 @@ define(function(require, exports, module) {
      * @method applyTorque
      * @param torque {Vector} torque
      */
-    Body.prototype.applyTorque = function applyTorque(torque) {
+    applyTorque(torque) {
         this.wake();
         this.torque.set(this.torque.add(torque));
-    };
+    }
 
     /**
      * Extends Particle.getTransform to include a rotational component
@@ -183,12 +184,12 @@ define(function(require, exports, module) {
      * @method getTransform
      * @return transform {Transform}
      */
-    Body.prototype.getTransform = function getTransform() {
+    getTransform() {
         return Transform.thenMove(
             this.orientation.getTransform(),
-            Transform.getTranslate(Particle.prototype.getTransform.call(this))
+            Transform.getTranslate(super.getTransform())
         );
-    };
+    }
 
     /**
      * Extends Particle._integrate to also update the rotational states
@@ -198,12 +199,12 @@ define(function(require, exports, module) {
      * @protected
      * @param dt {Number} delta time
      */
-    Body.prototype._integrate = function _integrate(dt) {
-        Particle.prototype._integrate.call(this, dt);
+    _integrate(dt) {
+        super._integrate(dt);
         this.integrateAngularMomentum(dt);
         this.updateAngularVelocity(dt);
         this.integrateOrientation(dt);
-    };
+    }
 
     /**
      * Updates the angular momentum via the its integrator.
@@ -211,9 +212,9 @@ define(function(require, exports, module) {
      * @method integrateAngularMomentum
      * @param dt {Number} delta time
      */
-    Body.prototype.integrateAngularMomentum = function integrateAngularMomentum(dt) {
+    integrateAngularMomentum(dt) {
         Integrator.integrateAngularMomentum(this, dt);
-    };
+    }
 
     /**
      * Updates the orientation via the its integrator.
@@ -221,9 +222,7 @@ define(function(require, exports, module) {
      * @method integrateOrientation
      * @param dt {Number} delta time
      */
-    Body.prototype.integrateOrientation = function integrateOrientation(dt) {
+    integrateOrientation(dt) {
         Integrator.integrateOrientation(this, dt);
-    };
-
-    module.exports = Body;
-});
+    }
+}
