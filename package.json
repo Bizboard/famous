@@ -108,26 +108,12 @@
   },
   "homepage": "https://famo.us",
   "jspm": {
+    "main": "famous.js",
     "directories": {
       "lib": "src"
+    },
+    "devDependencies": {
+      "plugin-babel": "npm:systemjs-plugin-babel@^0.0.25"
     }
-  },
-  "devDependencies": {
-    "eslint": "^0.16.2",
-    "famous-dist-generator": "^1.0.2",
-    "famous-doc-generator": "^0.8.0",
-    "famous-examples-generator": "^0.3.0",
-    "jscs": "^1.5.9"
-  },
-  "dependencies": {
-    "cssify": "^0.7.0",
-    "deamdify": "^0.1.1",
-    "object-assign": "^4.1.1"
-  },
-  "browserify": {
-    "transform": [
-      "cssify",
-      "deamdify"
-    ]
   }
 }
