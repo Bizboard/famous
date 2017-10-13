@@ -137,7 +137,7 @@ export default class Easing {
    */
   static inOutSine(t) {
       return -.5*(Math.cos(Math.PI*t) - 1);
-  },
+  }
 
   /**
    * @property inExpo

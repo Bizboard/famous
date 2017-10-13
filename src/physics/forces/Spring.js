@@ -80,7 +80,7 @@ export default class Spring extends Force {
      * @protected
      * @static
      */
-    Spring.DEFAULT_OPTIONS = {
+    static DEFAULT_OPTIONS = {
 
         /**
          * The amount of time in milliseconds taken for one complete oscillation

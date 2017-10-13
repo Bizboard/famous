@@ -11,6 +11,8 @@
 import MultipleTransition from './MultipleTransition.js';
 import TweenTransition from './TweenTransition.js';
 
+let transitionMethods = {};
+
 /*eslint-disable new-cap */
 export default class Transitionable {
 
@@ -49,7 +51,6 @@ export default class Transitionable {
       this.set(start);
   }
 
-  var transitionMethods = {};
 
   register(methods) {
       var success = true;

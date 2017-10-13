@@ -10,6 +10,78 @@
 
 import EventHandler from '../core/EventHandler.js';
 
+function _updateForce(index) {
+  var boundAgent = _getAgentData.call(this, this._forces[index]);
+  boundAgent.agent.applyForce(boundAgent.targets, boundAgent.source);
+}
+
+function _updateForces() {
+  for (var index = this._forces.length - 1; index > -1; index--)
+    this._updateForce(index);
+}
+
+function _updateConstraint(index, dt) {
+  var boundAgent = this._agentData[this._constraints[index]];
+  return boundAgent.agent.applyConstraint(boundAgent.targets, boundAgent.source, dt);
+}
+
+function _updateConstraints(dt) {
+  var iteration = 0;
+  while (iteration < this.options.constraintSteps) {
+    for (var index = this._constraints.length - 1; index > -1; index--)
+      this._updateConstraint(index, dt);
+    iteration++;
+  }
+}
+
+function _updateVelocities(body, dt) {
+  body.integrateVelocity(dt);
+  if (this.options.velocityCap)
+    body.velocity.cap(this.options.velocityCap).put(body.velocity);
+}
+
+function _updateAngularVelocities(body, dt) {
+  body.integrateAngularMomentum(dt);
+  body.updateAngularVelocity();
+  if (this.options.angularVelocityCap)
+    body.angularVelocity.cap(this.options.angularVelocityCap).put(body.angularVelocity);
+}
+
+function _updateOrientations(body, dt) {
+  body.integrateOrientation(dt);
+}
+
+function _updatePositions(body, dt) {
+  body.integratePosition(dt);
+  body.emit(_events.update, body);
+}
+
+function _integrate(dt) {
+  this._updateForces(dt);
+  this.forEach(_updateVelocities, dt);
+  this.forEachBody(_updateAngularVelocities, dt);
+  this._updateConstraints(dt);
+  this.forEachBody(_updateOrientations, dt);
+  this.forEach(_updatePositions, dt);
+}
+
+function _getParticlesEnergy() {
+  var energy = 0.0;
+  var particleEnergy = 0.0;
+  this.forEach(function(particle) {
+    particleEnergy = particle.getEnergy();
+    energy += particleEnergy;
+  });
+  return energy;
+}
+
+function _getAgentsEnergy() {
+  var energy = 0;
+  for (var id in this._agentData)
+    energy += this.getAgentEnergy(id);
+  return energy;
+}
+
 export default class PhysicsEngine {
 
     /**
@@ -251,9 +323,7 @@ export default class PhysicsEngine {
         this._currAgentId   = 0;
     }
 
-    function _getAgentData(id) {
-        return this._agentData[id];
-    }
+
 
     /**
      * Returns the corresponding agent given its agentId.
@@ -337,77 +407,7 @@ export default class PhysicsEngine {
         this.forEachBody(fn, dt);
     }
 
-    function _updateForce(index) {
-        var boundAgent = _getAgentData.call(this, this._forces[index]);
-        boundAgent.agent.applyForce(boundAgent.targets, boundAgent.source);
-    }
 
-    function _updateForces() {
-        for (var index = this._forces.length - 1; index > -1; index--)
-            this._updateForce(index);
-    }
-
-    function _updateConstraint(index, dt) {
-        var boundAgent = this._agentData[this._constraints[index]];
-        return boundAgent.agent.applyConstraint(boundAgent.targets, boundAgent.source, dt);
-    }
-
-    function _updateConstraints(dt) {
-        var iteration = 0;
-        while (iteration < this.options.constraintSteps) {
-            for (var index = this._constraints.length - 1; index > -1; index--)
-                this._updateConstraint(index, dt);
-            iteration++;
-        }
-    }
-
-    function _updateVelocities(body, dt) {
-        body.integrateVelocity(dt);
-        if (this.options.velocityCap)
-            body.velocity.cap(this.options.velocityCap).put(body.velocity);
-    }
-
-    function _updateAngularVelocities(body, dt) {
-        body.integrateAngularMomentum(dt);
-        body.updateAngularVelocity();
-        if (this.options.angularVelocityCap)
-            body.angularVelocity.cap(this.options.angularVelocityCap).put(body.angularVelocity);
-    }
-
-    function _updateOrientations(body, dt) {
-        body.integrateOrientation(dt);
-    }
-
-    function _updatePositions(body, dt) {
-        body.integratePosition(dt);
-        body.emit(_events.update, body);
-    }
-
-    function _integrate(dt) {
-        this._updateForces(dt);
-        this.forEach(_updateVelocities, dt);
-        this.forEachBody(_updateAngularVelocities, dt);
-        this._updateConstraints(dt);
-        this.forEachBody(_updateOrientations, dt);
-        this.forEach(_updatePositions, dt);
-    }
-
-    function _getParticlesEnergy() {
-        var energy = 0.0;
-        var particleEnergy = 0.0;
-        this.forEach(function(particle) {
-            particleEnergy = particle.getEnergy();
-            energy += particleEnergy;
-        });
-        return energy;
-    }
-
-    function _getAgentsEnergy() {
-        var energy = 0;
-        for (var id in this._agentData)
-            energy += this.getAgentEnergy(id);
-        return energy;
-    }
 
     /**
      * Calculates the potential energy of an agent, like a spring, by its Id

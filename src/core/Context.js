@@ -8,13 +8,17 @@
  * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-import RenderNode       from './RenderNode.js';
-import EventHandler     from './EventHandler.js';
+import RenderNode from './RenderNode.js';
+import EventHandler from './EventHandler.js';
 import ElementAllocator from './ElementAllocator.js';
-import Transform        from './Transform.js';
-import Transitionable   from '../transitions/Transitionable.js';
-import DOMBuffer        from './DOMBuffer.js';
+import Transform from './Transform.js';
+import Transitionable from '../transitions/Transitionable.js';
+import DOMBuffer from './DOMBuffer.js';
 
+
+const _zeroZero = [0, 0];
+const usePrefix = typeof document !== 'undefined' && !('perspective' in document.documentElement.style);
+const perspectiveStyle = usePrefix ? 'webkitPerspective' : 'perspective';
 
 /**
  * A context is a group of renderables, representing one hierarchy level in the DOM.
@@ -32,7 +36,7 @@ export default class Context {
 
   static _zeroZero = [0, 0];
   static usePrefix = typeof document !== 'undefined' && !('perspective' in document.documentElement.style);
-  static perspectiveStyle = usePrefix?'webkitPerspective':'perspective';
+  static perspectiveStyle = usePrefix ? 'webkitPerspective' : 'perspective';
 
   //TODO this function is quite ugly as it depends on the last state of _nodeContext
   _getElementSize() {

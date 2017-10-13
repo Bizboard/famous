@@ -408,7 +408,7 @@ export default class Quaternion {
    */
   slerp(q, t) {
       let omega;
-      let cosomega;
+      let cosomega;®
       let sinomega;
       let scaleFrom;
       let scaleTo;

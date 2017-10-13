@@ -8,8 +8,8 @@
  * this class to ES6 for purpose of unifying Arva's development environment.
  */
 
-import Vector from '../math/Vector.js';
-import EventHandler from '../core/EventHandler.js';
+import Vector from '../../math/Vector.js';
+import EventHandler from '../../core/EventHandler.js';
 
 
 export default class Force {

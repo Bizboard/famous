@@ -7,7 +7,52 @@
  * This class originated from the Famous 3.5 Async Render Engine built by Famous Industries. We've ported
  * this class to ES6 for purpose of unifying Arva's development environment.
  */
+registeredCurves = {};
 
+function getCurves() {
+  return registeredCurves;
+}
+
+function _getAgentData(id) {
+  return this._agentData[id];
+}
+
+function _calculateVelocity(current, start, curve, duration, t) {
+  var velocity;
+  var eps = 1e-7;
+  var speed = (curve(t) - curve(t - eps)) / eps;
+  if (current instanceof Array) {
+    velocity = [];
+    for (var i = 0; i < current.length; i++){
+      if (typeof current[i] === 'number')
+        velocity[i] = speed * (current[i] - start[i]) / duration;
+      else
+        velocity[i] = 0;
+    }
+
+  }
+  else velocity = speed * (current - start) / duration;
+  return velocity;
+}
+
+function _interpolate(a, b, t) {
+  return ((1 - t) * a) + (t * b);
+}
+
+function _calculateState(start, end, t) {
+  var state;
+  if (start instanceof Array) {
+    state = [];
+    for (var i = 0; i < start.length; i++) {
+      if (typeof start[i] === 'number')
+        state[i] = _interpolate(start[i], end[i], t);
+      else
+        state[i] = start[i];
+    }
+  }
+  else state = _interpolate(start, end, t);
+  return state;
+}
 
 export default class TweenTransition {
 
@@ -87,7 +132,6 @@ export default class TweenTransition {
         speed: 0 /* considered only if positive */
     };
 
-    static registeredCurves = {};
 
     /**
      * Add "unit" curve to internal dictionary of registered curves.
@@ -162,14 +206,7 @@ export default class TweenTransition {
      * @return {object} curve functions of one numeric variable mapping [0,1]
      *    to range inside [0,1]
      */
-    static getCurves() {
-        return registeredCurves;
-    }
 
-     // Interpolate: If a linear function f(0) = a, f(1) = b, then return f(t)
-    static _interpolate(a, b, t) {
-        return ((1 - t) * a) + (t * b);
-    }
 
     static _clone(obj) {
         if (obj instanceof Object) {
@@ -313,38 +350,7 @@ export default class TweenTransition {
         return this.state;
     }
 
-    function _calculateVelocity(current, start, curve, duration, t) {
-        var velocity;
-        var eps = 1e-7;
-        var speed = (curve(t) - curve(t - eps)) / eps;
-        if (current instanceof Array) {
-            velocity = [];
-            for (var i = 0; i < current.length; i++){
-                if (typeof current[i] === 'number')
-                    velocity[i] = speed * (current[i] - start[i]) / duration;
-                else
-                    velocity[i] = 0;
-            }
 
-        }
-        else velocity = speed * (current - start) / duration;
-        return velocity;
-    }
-
-    function _calculateState(start, end, t) {
-        var state;
-        if (start instanceof Array) {
-            state = [];
-            for (var i = 0; i < start.length; i++) {
-                if (typeof start[i] === 'number')
-                    state[i] = _interpolate(start[i], end[i], t);
-                else
-                    state[i] = start[i];
-            }
-        }
-        else state = _interpolate(start, end, t);
-        return state;
-    }
 
     /**
      * Update internal state to the provided timestamp. This may invoke the last
