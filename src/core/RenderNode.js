@@ -101,19 +101,20 @@ define(function(require, exports, module) {
     };
 
     // apply results of rendering this subtree to the document
-    function _applyCommit(spec, context, cacheStorage) {
+    RenderNode._applyCommit = function _applyCommit(spec, context, cacheStorage) {
         var result = SpecParser.parse(spec, context);
         var keys = Object.keys(result);
         for (var i = 0; i < keys.length; i++) {
-            var id = keys[i];
-            var childNode = Entity.get(id);
-            var commitParams = result[id];
-            commitParams.allocator = context.allocator;
-            var commitResult = childNode.commit(commitParams);
-            if (commitResult) _applyCommit(commitResult, context, cacheStorage);
-            else cacheStorage[id] = commitParams;
+          var id = keys[i];
+          var childNode = Entity.get(id);
+          var commitParams = result[id];
+          commitParams.allocator = context.allocator;
+          var commitResult = childNode.commit(commitParams);
+          if (commitResult) RenderNode._applyCommit(commitResult, context, cacheStorage);
+          else cacheStorage[id] = commitParams;
         }
-    }
+      }
+
 
     /**
      * Commit the content change from this node to the document.
@@ -135,7 +136,7 @@ define(function(require, exports, module) {
 
         this._prevResults = this._resultCache;
         this._resultCache = {};
-        _applyCommit(this.render(), context, this._resultCache);
+        RenderNode._applyCommit(this.render(), context, this._resultCache);
     };
 
     /**
