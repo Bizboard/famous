@@ -26,17 +26,14 @@ define(function(require, exports, module) {
     function ImageSurface(options) {
         this._imageUrl = undefined;
         Surface.apply(this, arguments);
-        this.on('load', (function() {
-          if(this.size && (this.size[0] === true || this.size[1] === true)){
-            this._eventOutput.emit('resize');
-          }
-        }).bind(this));
+        this.on('load', this._onImageLoadedInDOM.bind(this));
     }
 
     var urlCache = [];
     var countCache = [];
     var nodeCache = [];
     var cacheEnabled = true;
+
 
     ImageSurface.enableCache = function enableCache() {
         cacheEnabled = true;
@@ -64,6 +61,12 @@ define(function(require, exports, module) {
     ImageSurface.prototype.constructor = ImageSurface;
     ImageSurface.prototype.elementType = 'img';
     ImageSurface.prototype.elementClass = 'famous-surface';
+
+  ImageSurface.prototype._onImageLoadedInDOM = function onImageLoadedInDOM() {
+    if(this.size && (this.size[0] === true || this.size[1] === true)){
+      this._eventOutput.emit('resize');
+    }
+  };
 
     /**
      * Set content URL.  This will cause a re-rendering.
