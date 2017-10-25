@@ -137,9 +137,10 @@ define(function (require, exports, module) {
    */
 
   ElementAllocator.prototype.deallocate = function deallocate(element) {
-    var nodeType = element.nodeName.toLowerCase();
-    var nodeStore = this.detachedHtmlElements[nodeType];
-    nodeStore.push(element);
+    //TODO Shouldn't this wait until the element is fully deallocated?
+      var nodeType = element.nodeName.toLowerCase();
+      var nodeStore = this.detachedHtmlElements[nodeType];
+      nodeStore.push(element);
   };
 
   module.exports = ElementAllocator;
