@@ -129,7 +129,7 @@ define(function(require, exports, module) {
         RenderNode._applyCommit(this.render(), context, this._resultCache);
 
         /* Free up render nodes from last loop */
-        this._cleanupCache(this._prevResults, allocator);
+        this._cleanupCache(Object.keys(this._prevResults).filter((id) => this._resultCache[id] === undefined), context.allocator);
     };
 
 
@@ -138,13 +138,12 @@ define(function(require, exports, module) {
      * @param allocator
      */
     RenderNode.prototype.cleanup = function commit(allocator) {
-        this._cleanupCache(this._resultCache, allocator);
+        this._cleanupCache(Object.keys(this._resultCache), allocator);
     };
 
-    RenderNode.prototype._cleanupCache = function _cleanupCache(cache, allocator) {
-        var prevKeys = Object.keys(cache);
-        for (var i = 0; i < prevKeys.length; i++) {
-            var id = prevKeys[i];
+    RenderNode.prototype._cleanupCache = function _cleanupCache(cacheKeys, allocator) {
+        for (var i = 0; i < cacheKeys.length; i++) {
+            var id = cacheKeys[i];
             var object = Entity.get(id);
             if (object.cleanup) object.cleanup(allocator);
         }
