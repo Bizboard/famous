@@ -123,27 +123,25 @@ define(function(require, exports, module) {
      * @param {Context} context render context
      */
     RenderNode.prototype.commit = function commit(context) {
-        // free up some divs from the last loop
-        var prevKeys = Object.keys(this._prevResults);
-        for (var i = 0; i < prevKeys.length; i++) {
-            var id = prevKeys[i];
-            if (this._resultCache[id] === undefined) {
-                var object = Entity.get(id);
-                if (object.cleanup) object.cleanup(context.allocator);
-            }
-        }
-
         this._prevResults = this._resultCache;
         this._resultCache = {};
         RenderNode._applyCommit(this.render(), context, this._resultCache);
+
+        /* Free up render nodes from last loop */
+        this._cleanupCache(this._prevResults, allocator);
     };
+
 
     /**
      * Cleans up all current renderables
-     * @param context
+     * @param allocator
      */
     RenderNode.prototype.cleanup = function commit(allocator) {
-        var prevKeys = Object.keys(this._prevResults);
+        this._cleanupCache(this._resultCache, allocator);
+    };
+
+    RenderNode.prototype._cleanupCache = function _cleanupCache(cache, allocator) {
+        var prevKeys = Object.keys(cache);
         for (var i = 0; i < prevKeys.length; i++) {
             var id = prevKeys[i];
             var object = Entity.get(id);

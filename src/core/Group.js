@@ -64,16 +64,6 @@ define(function (require, exports, module) {
     return Surface.prototype.render.call(this);
   };
 
-  /**
-   * Place the document element this component manages into the document.
-   *
-   * @private
-   * @method deploy
-   * @param {Node} target document parent of this container
-   */
-  Group.prototype.deploy = function deploy(target) {
-    this.context.migrate(target);
-  };
 
 
   Group.prototype.allocate = function allocate(allocator) {
@@ -113,9 +103,9 @@ define(function (require, exports, module) {
   };
 
 
-  Group.prototype.deallocate = function deallocate(allocator) {
+  Group.prototype.deallocate = function deallocate(parentAllocator) {
     this.context.cleanup(this._allocator);
-    return allocator.deallocateAllocator(this._allocator);
+    return parentAllocator.deallocateAllocator(this._allocator);
   };
 
 
