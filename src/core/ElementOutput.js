@@ -297,6 +297,15 @@ define(function(require, exports, module) {
         }
     };
 
+    ElementOutput.prototype.getLastAbsoluteTransform = function getLastAbsoluteTransform() {
+        return this._matrix;
+    };
+
+    ElementOutput.prototype.getLastAbsoluteTranslate = function getLastAbsoluteTranslate() {
+      var matrix = this._matrix;
+      return [matrix[12], matrix[13], matrix[14]];
+    };
+
     /**
      * Place the document element that this component manages into the document.
      *
