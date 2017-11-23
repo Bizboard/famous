@@ -8,9 +8,10 @@
 export class RenderablePrototype {
   _decoratorFunctions = [];
 
-  constructor(type, options){
+  constructor(type, options, children){
     this.type = type;
     this.options = options;
+    this.children = children;
   }
 
   addDirectlyAppliedDecoratorFunction(decoratorFunction){

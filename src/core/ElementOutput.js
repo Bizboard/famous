@@ -169,8 +169,11 @@ define(function(require, exports, module) {
     function _formatCSSTransform(m) {
         m[12] = Math.round(m[12] * devicePixelRatio) / devicePixelRatio;
         m[13] = Math.round(m[13] * devicePixelRatio) / devicePixelRatio;
-
-        var result = 'matrix3d(';
+        var result ='';
+        if(this._element && this._element.style.webkitPerspective){
+          result += 'perspective(' + this._element.style.webkitPerspective + ') ';
+        }
+         result += 'matrix3d(';
         for (var i = 0; i < 15; i++) {
             result += (m[i] < 0.000001 && m[i] > -0.000001) ? '0,' : m[i] + ',';
         }
@@ -192,12 +195,12 @@ define(function(require, exports, module) {
     var _setMatrix;
     if (usePrefix) {
         _setMatrix = function(element, matrix) {
-          DOMBuffer.assignProperty(element.style, 'webkitTransform', _formatCSSTransform(matrix));
+          DOMBuffer.assignProperty(element.style, 'webkitTransform', _formatCSSTransform.call(this, matrix));
         };
     }
     else {
         _setMatrix = function(element, matrix) {
-          DOMBuffer.assignProperty(element.style, 'transform', _formatCSSTransform(matrix));
+          DOMBuffer.assignProperty(element.style, 'transform', _formatCSSTransform.call(this, matrix));
         };
     }
 
@@ -282,7 +285,7 @@ define(function(require, exports, module) {
             if (!matrix) matrix = Transform.identity;
             this._matrix = matrix;
             var aaMatrix = this._size ? Transform.thenMove(matrix, [-this._size[0]*origin[0], -this._size[1]*origin[1], 0]) : matrix;
-            _setMatrix(target, aaMatrix);
+            _setMatrix.call(this, target, aaMatrix);
              /* Since a lot of browsers are buggy, they need the z-index to be set as well besides the 3d transformation
               * matrix to successfully place things on top of each other*/
             DOMBuffer.assignProperty(target.style, 'zIndex', Math.round(aaMatrix[14]));
