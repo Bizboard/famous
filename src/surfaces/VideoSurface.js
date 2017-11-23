@@ -61,6 +61,10 @@ define(function(require, exports, module) {
             this._videoUrl = options.src;
             this._contentDirty = true;
         }
+        if(options.srcObject) {
+            this._srcObject = options.srcObject;
+            this._contentDirty = true;
+        }
     };
 
     /**
@@ -75,6 +79,17 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Set srcObject of the video
+     *
+     * @method setSrcObject
+     * @param {blob|file} srcObject
+     */
+    VideoSurface.prototype.setSrcObject = function setSrcObject(srcObject) {
+        this._srcObject = srcObject;
+        this._contentDirty = true;
+    };
+
+    /**
      * Place the document element this component manages into the document.
      *   Note: In the case of VideoSurface, simply changes the options on the target.
      *
@@ -83,7 +98,11 @@ define(function(require, exports, module) {
      * @param {Node} target document parent of this container
      */
     VideoSurface.prototype.deploy = function deploy(target) {
-        target.src = this._videoUrl;
+        if(this._srcObject) {
+            target.srcObject = this._srcObject;
+        } else {
+            target.src = this._videoUrl;
+        }
         target.autoplay = this.options.autoplay;
     };
 
@@ -98,6 +117,7 @@ define(function(require, exports, module) {
      */
     VideoSurface.prototype.recall = function recall(target) {
         target.src = '';
+        target.srcObject = null;
     };
 
     module.exports = VideoSurface;
