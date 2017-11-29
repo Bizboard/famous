@@ -108,8 +108,8 @@ define(function(require, exports, module) {
         Surface.prototype.setSize.apply(this, arguments);
         if (canvasSize) this._canvasSize = [canvasSize[0], canvasSize[1]];
         if (this._currentTarget) {
-            this._currentTarget.width = this._canvasSize[0];
-            this._currentTarget.height = this._canvasSize[1];
+            this._currentTarget.width = this._size[0];
+            this._currentTarget.height = this._size[1];
         }
     };
 

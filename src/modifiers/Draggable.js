@@ -200,13 +200,16 @@ define(function(require, exports, module) {
   };
 
   Draggable.prototype.getProjectionParameter = function adjustProjectionParameter(options) {
-    if (options.projection !== undefined) {
-      var proj = options.projection || [];
       var actualProjection = 0;
+      if (options.projection !== undefined) {
+        var proj = options.projection || [];
       ['x', 'y'].forEach(function(val) {
         if (proj.indexOf(val) !== -1) actualProjection |= _direction[val];
       });
-    }
+    } else {
+        /* 1 & 2 */
+        return 3;
+      }
     return actualProjection;
   }
 
