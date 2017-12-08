@@ -37,10 +37,6 @@ define(function(require, exports, module) {
         this._eventOutput = new EventHandler();
         this._eventOutput.bindThis(this);
 
-        /** @ignore */
-        this.eventForwarder = function eventForwarder(event) {
-            this._eventOutput.emit(event.type, event);
-        }.bind(this);
 
         this.id = Entity.register(this);
         this._element = null;
@@ -62,12 +58,13 @@ define(function(require, exports, module) {
      * @return {EventHandler} this
      */
     ElementOutput.prototype.on = function on(type, fn) {
-        if (this._element) DOMEventHandler.addEventListener(this.id, this._element, type, this.eventForwarder);
+        if (this._element)
+          DOMEventHandler.addEventListener(this.id, this._element, type, fn);
         this._eventOutput.on(type, fn);
     };
 
   ElementOutput.prototype.once = function on(type, fn) {
-      if (this._element) DOMEventHandler.addEventListener(this.id, this._element, type, this.eventForwarder);
+      if (this._element) DOMEventHandler.addEventListener(this.id, this._element, type, fn);
       this._eventOutput.once(type, fn);
     };
 
@@ -144,16 +141,22 @@ define(function(require, exports, module) {
     //    Calling this enables methods like #on and #pipe.
     function _addEventListeners(target) {
         for (var i in this._eventOutput.listeners) {
-            DOMEventHandler.addEventListener(this.id, target, i, this.eventForwarder);
+            var listeners = this._eventOutput.listeners[i];
+            for(var j=0;j<listeners.length;j++){
+              DOMEventHandler.addEventListener(this.id, target, i, listeners[j]);
+            }
         }
     }
 
     //  Detach Famous event handling from document events emanating from target
     //  document element.  This occurs just before detach from the document.
     function _removeEventListeners(target) {
-        for (var i in this._eventOutput.listeners) {
-            DOMEventHandler.removeEventListener(target, this.id, i, this.eventForwarder)
+      for (var i in this._eventOutput.listeners) {
+        var listeners = this._eventOutput.listeners;
+        for(var j=0;j<listeners.length;j++){
+          DOMEventHandler.removeEventListener(this.id, target, i, listeners[j]);
         }
+      }
     }
 
     /**
