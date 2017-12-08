@@ -26,12 +26,17 @@ define(function (require, exports, module) {
   ].concat(iOS ? ['click', 'touchstart', 'touchend'] : []);
 
   var initializedListeners = {};
-
+  var nativeEventsMemoization = {};
   DOMEventHandler.isNativeEvent = function(eventName) {
-    return typeof document.body["on" + eventName] !== "undefined"
+    var memoizedValue = nativeEventsMemoization[eventName];
+    if(typeof memoizedValue === 'boolean'){
+      return memoizedValue;
+    }
+    return (nativeEventsMemoization[eventName] = (
+      typeof document.body["on" + eventName] !== "undefined"
       ||
-        /* Needed because otherwise not able to use mobile emulation in browser! */
-      ['touchmove', 'touchstart', 'touchend'].includes(eventName)
+      /* Needed because otherwise not able to use mobile emulation in browser! */
+      ['touchmove', 'touchstart', 'touchend'].includes(eventName)))
   };
 
   DOMEventHandler.addEventListener = function(id, element, type, callback){
