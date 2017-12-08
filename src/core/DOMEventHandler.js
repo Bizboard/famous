@@ -33,7 +33,7 @@ define(function (require, exports, module) {
       return memoizedValue;
     }
     return (nativeEventsMemoization[eventName] = (
-      typeof document.body["on" + eventName] !== "undefined"
+      typeof document.body['on' + eventName] !== 'undefined'
       ||
       /* Needed because otherwise not able to use mobile emulation in browser! */
       ['touchmove', 'touchstart', 'touchend'].includes(eventName)))
