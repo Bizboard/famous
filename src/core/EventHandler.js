@@ -139,8 +139,6 @@ define(function(require, exports, module) {
     else return false;
   };
 
-
-
   /**
    * Bind a callback function to an event type handled by this object.
    *
@@ -148,46 +146,31 @@ define(function(require, exports, module) {
    *
    * @param {string} type event type key (for example, 'click')
    * @param {function(string, Object)} handler callback
-   * @param {Object} options options
-   * @param {Boolean} [options.propagate] defaults to true. If the events should bubble
+   * @param options
    * @return {EventHandler} this
    */
   EventHandler.prototype.on = function on(type, handler, options) {
-    options = options || {};
-    let listenUpstream = options.propagate;
-    if(listenUpstream === undefined){
-      listenUpstream = true;
-    }
-    EventEmitter.prototype.on.call(this, type, handler, options);
-    if (listenUpstream) {
+    EventEmitter.prototype.on.apply(this, arguments);
+    if (!(type in this.upstreamListeners)) {
+      var upstreamListener = this.emit.bind(this, type);
+      /* Make sure that the options are passed along */
+      upstreamListener._handlerOptions = options || handler._handlerOptions;
+      this.upstreamListeners[type] = upstreamListener;
       for (var i = 0; i < this.upstream.length; i++) {
-        this.upstream[i].on(type, handler, options);
+        this.upstream[i].on(type, upstreamListener, options);
       }
     }
     return this;
   };
 
-  EventHandler.prototype.onOwnEvent = function on(type, handler) {
-    return this.on(type, handler, false);
-  };
-
-
-  EventHandler.prototype.onceOwnEvent = function once(type, handler) {
-    return this.once(type, handler, false);
-  };
-    /**
+  /**
    * Listens once
    * @param type
    * @param handler
    * @returns {EventHandler}
    */
-  EventHandler.prototype.once = function once(type, handler, options) {
-    options = options || {};
-    let propagate = options.propagate;
-    if(propagate === undefined)
-      propagate = true;
-    return EventEmitter.prototype.once.call(this, type, handler, {propagate: propagate});
-
+  EventHandler.prototype.once = function on(type, handler) {
+    return EventEmitter.prototype.once.apply(this, arguments);
   };
 
   /**
