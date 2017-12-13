@@ -159,7 +159,11 @@ define(function(require, exports, module) {
       listenUpstream = true;
     }
     EventEmitter.prototype.on.call(this, type, handler, options);
-    if (listenUpstream) {
+    if (!(type in this.upstreamListeners) && listenUpstream) {
+      var upstreamListener = this.emit.bind(this, type);
+      /* Make sure that the options are passed along */
+      upstreamListener._handlerOptions = options || handler._handlerOptions;
+      this.upstreamListeners[type] = upstreamListener;
       for (var i = 0; i < this.upstream.length; i++) {
         this.upstream[i].on(type, handler, options);
       }
