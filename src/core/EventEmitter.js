@@ -39,7 +39,8 @@ define(function (require, exports, module) {
     for (var i = 1; i < arguments.length; i++) {
       args.push(arguments[i]);
     }
-    var handlers = this.listeners[type];
+    /* Shallow clone listeners in order to prevent modifications happening of the listeners due to once() wrappers */
+    var handlers = Array.from(this.listeners[type] || []);
     var suppressedHandlers = this.determineSurpressedTouchMoveEvents(type, handlers, args[0]);
     if (handlers) {
       for (var i = 0; i < handlers.length; i++) {
