@@ -79,6 +79,10 @@ define(function (require, exports, module) {
     generous: 0
   };
 
+  Engine.getCurrentFrameIndex = function() {
+    return currentFrame;
+  };
+
   /**
    * Inside requestAnimationFrame loop, step() is called, which:
    *   calculates current FPS (throttling loop if it is over limit set in setFPSCap),
