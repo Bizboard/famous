@@ -68,13 +68,20 @@ define(function (require, exports, module) {
    * @param {Object} attributes property dictionary of "key" => "value"
    */
   Surface.prototype.setAttributes = function setAttributes(attributes) {
-    for (var n in attributes) {
-      if (n === 'style') throw new Error('Cannot set styles via "setAttributes". Use "setProperties" instead.');
-      this.attributes[n] = attributes[n];
+    for (var key in attributes) {
+      if (key === 'style') throw new Error('Cannot set styles via "setAttributes". Use "setProperties" instead.');
       /* Remove the attribute that is about to be removed, if applicable */
-      var attributeToBeRemovedIndex = this._dirtyAttributes.indexOf(n);
+      var attributeToBeRemovedIndex = this._dirtyAttributes.indexOf(key);
       if (attributeToBeRemovedIndex !== -1) {
         this._dirtyAttributes.splice(attributeToBeRemovedIndex, 1);
+      }
+      var value = attributes[key];
+      /* If the value is specified and undefined, it should be removed */
+      if(value === undefined){
+        this._dirtyAttributes.push(key);
+        delete this.attributes[key];
+      } else {
+        this.attributes[key] = value;
       }
     }
     this._attributesDirty = true;
@@ -268,10 +275,13 @@ define(function (require, exports, module) {
     if(!options){
       options = {};
     }
+
     if (options.size) this.setSize(options.size);
     if (options.classes) this.setClasses(options.classes);
     if (options.properties) this.setProperties(options.properties);
-    if (options.attributes) this.setAttributes(options.attributes);
+    if (options.attributes) {
+      this.setAttributes(options.attributes);
+    }
     if (options.content !== undefined) this.setContent(options.content);
     this.options = options;
     return this;
@@ -326,8 +336,8 @@ define(function (require, exports, module) {
     for (var index in this._dirtyAttributes) {
       var name = this._dirtyAttributes[index];
       DOMBuffer.removeAttribute(target, name);
-      this._dirtyAttributes.shift();
     }
+    this._dirtyAttributes = [];
   }
 
   // Clear all Famous-managed attributes from the document element.

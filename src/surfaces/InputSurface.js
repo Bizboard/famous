@@ -47,7 +47,7 @@ define(function (require, exports, module) {
 
   InputSurface.prototype.setOptions = function setOptions(options) {
     var newPlaceholder = options.placeholder !== undefined ? options.placeholder : '',
-      newValue = options.value !== undefined ? options.value : '',
+      newValue = options.value !== undefined ? options.value : this.getValue(),
       newType = options.type || 'text',
       newName = options.name || '';
     this._contentDirty = newPlaceholder !== this._placeholder
