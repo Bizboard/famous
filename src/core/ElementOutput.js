@@ -42,11 +42,29 @@ define(function(require, exports, module) {
             this._eventOutput.emit(event.type, event);
         }.bind(this);
 
+      this._focusListenersInitialized = false;
+      this._hasFocus = false;
+      /* We use special event forwarders for the blur and focus events */
+      this._onBlur = function onBlur() {
+          if(this._hasFocus){
+            this._eventOutput.emit('blur');
+          }
+          this._hasFocus = false;
+        }.bind(this);
+
+        this._onFocus = function onFocus() {
+          if(!this._hasFocus){
+            this._eventOutput.emit('focus');
+          }
+          this._hasFocus = true;
+        }.bind(this);
+
         this.id = Entity.register(this);
         this._element = null;
         this._sizeDirty = false;
         this._originDirty = false;
         this._transformDirty = false;
+
 
         this._invisible = false;
         if (element) this.attach(element);
@@ -62,9 +80,35 @@ define(function(require, exports, module) {
      * @return {EventHandler} this
      */
     ElementOutput.prototype.on = function on(type, fn) {
-        if (this._element) DOMEventHandler.addEventListener(this.id, this._element, type, this.eventForwarder);
+        var elementWasHandled = ['blur', 'focus'].includes(type) ? this._handleFocusEvent(fn) : false;
+        if (this._element && !elementWasHandled) DOMEventHandler.addEventListener(this.id, this._element, type, this.eventForwarder);
         this._eventOutput.on(type, fn);
     };
+
+  /**
+   * Handles a blur registration
+   * @param {Function} fn
+   * @returns {boolean}
+   * @private
+   */
+    ElementOutput.prototype._handleFocusEvent = function _handleBlurEvent(fn) {
+      if(!this._focusListenersInitialized){
+        this._focusListenersInitialized = true;
+        this.on('click', this._onFocus);
+        this.on('touchstart', this._onFocus);
+        this.on('mousedown', this._onFocus);
+        if(this._element){
+          this._attachBlurListeners();
+        }
+      }
+      return true;
+    };
+
+  ElementOutput.prototype._attachBlurListeners = function _attachBlurListeners() {
+    DOMEventHandler.addEventListenerForAllOthers(this.id, 'click', this._onBlur);
+    DOMEventHandler.addEventListenerForAllOthers(this.id, 'touchstart', this._onBlur);
+    DOMEventHandler.addEventListenerForAllOthers(this.id, 'mousedown', this._onBlur);
+  };
 
   ElementOutput.prototype.once = function on(type, fn) {
       if (this._element) DOMEventHandler.addEventListener(this.id, this._element, type, this.eventForwarder);
@@ -152,7 +196,12 @@ define(function(require, exports, module) {
     //  document element.  This occurs just before detach from the document.
     function _removeEventListeners(target) {
         for (var i in this._eventOutput.listeners) {
-            DOMEventHandler.removeEventListener(target, this.id, i, this.eventForwarder)
+            DOMEventHandler.removeEventListener(target, this.id, i, this.eventForwarder);
+        }
+        if(this._focusListenersInitialized){
+          DOMEventHandler.removeEventListenerForAllOthers(this.id, 'click', this._onBlur);
+          DOMEventHandler.removeEventListenerForAllOthers(this.id, 'touchstart', this._onBlur);
+          DOMEventHandler.removeEventListenerForAllOthers(this.id, 'mousedown', this._onBlur);
         }
     }
 
@@ -308,6 +357,9 @@ define(function(require, exports, module) {
      * @param {Node} target document parent of this container
      */
     ElementOutput.prototype.attach = function attach(target) {
+      if(this._focusListenersInitialized){
+        this._attachBlurListeners();
+      }
         this._element = target;
       _addEventListeners.call(this, target);
     };

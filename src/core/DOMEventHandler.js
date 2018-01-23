@@ -39,8 +39,32 @@ define(function (require, exports, module) {
       ['touchmove', 'touchstart', 'touchend'].includes(eventName)))
   };
 
+  DOMEventHandler.addEventListenerForAllOthers = function(id, type, callback){
+    if(!this.isNativeEvent(type)){
+      throw new Error('Cannot set an exclusion event on a non-native event');
+    }
+    var eventEmitters = this._addEventListener(id, type, callback);
+    var wrapperCallback = function (receivedID, event) {
+      /* String conversion, because the recieved id will always be a string, and the id passed can be a number */
+      if(receivedID !== "" + id){
+        return callback(event);
+      }
+    };
+    /* Todo think of a cleaner solution than setting a property on the callback. With this solution, multiple ID sources
+    *  cannot share the same callback */
+    if(!callback.wrapperCallback){
+      callback.wrapperCallback = wrapperCallback;
+    }
+    eventEmitters.exclusion.on(type, wrapperCallback);
+  };
+  DOMEventHandler.removeEventListenerForAllOthers = function(id, type, callback){
+    if(initializedListeners[type]){
+      initializedListeners[type].exclusion.removeListener(type, callback && callback.wrapperCallback);
+    }
+  };
+
   DOMEventHandler.addEventListener = function(id, element, type, callback){
-    if(!DOMEventHandler.isNativeEvent(type)){
+    if(!this.isNativeEvent(type)){
       return;
     }
 
@@ -48,19 +72,27 @@ define(function (require, exports, module) {
       return element.addEventListener(type, callback);
     }
     DOMBuffer.setAttribute(element, 'data-arvaid', id); //TODO see if this can be replaced by symbols for performance
-    var eventEmitter = initializedListeners[type];
-    if(!eventEmitter){
-      eventEmitter = initializedListeners[type] = new EventEmitter();
+    var eventEmitters = this._addEventListener(id, type, callback);
+    eventEmitters.inclusion.on(id, callback);
+  };
+
+  DOMEventHandler._addEventListener = function(id, type, callback) {
+    var eventEmitters = initializedListeners[type];
+    if(!eventEmitters){
+      eventEmitters = initializedListeners[type] = {
+        inclusion: new EventEmitter(),
+        exclusion: new EventEmitter()
+      };
       window.addEventListener(type, function (event) {
         var target = event.target;
         var receivedID = target && target.getAttribute && target.getAttribute('data-arvaid');
         if(receivedID){
-          eventEmitter.emit(receivedID, event);
+          eventEmitters.inclusion.emit(receivedID, event);
         }
+        eventEmitters.exclusion.emit(event.type, receivedID, event);
       }, {passive: true});
     }
-    eventEmitter.on(id, callback);
-
+    return eventEmitters;
   };
 
   DOMEventHandler.removeEventListener = function(element, id, type, callback) {
@@ -68,7 +100,7 @@ define(function (require, exports, module) {
       return element.removeEventListener(type, callback);
     }
     if(initializedListeners[type]){
-      initializedListeners[type].removeListener(id, callback);
+      initializedListeners[type].exclusion.removeListener(id, callback);
     }
   };
 

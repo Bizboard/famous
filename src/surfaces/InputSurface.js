@@ -33,17 +33,25 @@ define(function (require, exports, module) {
     Surface.apply(this, arguments);
 
     this.on('click', this.focus.bind(this));
-    /* TODO: Determine if this code needs to be here and if so whether it can be integrated with DOMEventHandler */
-    window.addEventListener('click', function (event) {
-      if (event.target !== this._currentTarget) this.blur();
-    }.bind(this));
   }
   staticInherits(InputSurface, Surface);
   InputSurface.prototype = Object.create(Surface.prototype);
   InputSurface.prototype.constructor = InputSurface;
 
+
+
   InputSurface.prototype.elementType = 'input';
   InputSurface.prototype.elementClass = 'famous-surface';
+
+  /**
+   * Returns false to ensure native handling of blur event
+   * @returns {boolean}
+   * @private
+   */
+  InputSurface.prototype._handleFocusEvent = function _handleFocusEvent () {
+      return false;
+  };
+
 
   InputSurface.prototype.setOptions = function setOptions(options) {
     var newPlaceholder = options.placeholder !== undefined ? options.placeholder : '',
