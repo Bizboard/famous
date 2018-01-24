@@ -165,7 +165,7 @@ define(function(require, exports, module) {
       upstreamListener._handlerOptions = options || handler._handlerOptions;
       this.upstreamListeners[type] = upstreamListener;
       for (var i = 0; i < this.upstream.length; i++) {
-        this.upstream[i].on(type, handler, options);
+        this.upstream[i].on(type, upstreamListener, options);
       }
     }
     return this;
