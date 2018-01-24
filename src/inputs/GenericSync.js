@@ -122,6 +122,15 @@ define(function(require, exports, module) {
             for (var key in syncs)
                 _addSingleSync.call(this, key, syncs[key]);
     };
+  /**
+   * @abstract
+   * @param syncs
+   */
+  GenericSync.prototype.halt = function halt(syncs) {
+      for(var syncName in this._syncs){
+        this._syncs[syncName].halt();
+      }
+    };
 
     module.exports = GenericSync;
 });

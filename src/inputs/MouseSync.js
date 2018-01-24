@@ -234,6 +234,14 @@ define(function(require, exports, module) {
         this._move = true;
     }
 
+    function _clearFlags() {
+      this._prevCoord = undefined;
+      this._prevTime = undefined;
+      this._down = false;
+      this._move = false;
+      this._positionHistory = [];
+    }
+
     /**
      *  Triggered by mouseup on the element or document body if propagation is enabled, or
      *  mouseleave if propagation is off.
@@ -245,11 +253,7 @@ define(function(require, exports, module) {
         if (!this._down) return;
 
         this._eventOutput.emit('end', this._payload);
-        this._prevCoord = undefined;
-        this._prevTime = undefined;
-        this._down = false;
-        this._move = false;
-        this._positionHistory = [];
+        _clearFlags.call(this)
     }
 
     /**
@@ -295,6 +299,10 @@ define(function(require, exports, module) {
      */
     MouseSync.prototype.setOptions = function setOptions(options) {
         return this._optionsManager.setOptions(options);
+    };
+
+    MouseSync.prototype.halt = function halt() {
+        _clearFlags.call(this);
     };
 
     module.exports = MouseSync;

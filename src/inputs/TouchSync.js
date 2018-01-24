@@ -91,6 +91,7 @@ define(function(require, exports, module) {
     function _handleStart(data) {
         var velocity;
         var delta;
+        this._down = true;
         if (this.options.direction !== undefined){
             this._position = 0;
             velocity = 0;
@@ -120,6 +121,9 @@ define(function(require, exports, module) {
      *  @private
      */
     function _handleMove(data) {
+        if(!this._down){
+          return;
+        }
         var history = data.history;
 
         var currHistory = history[history.length - 1];
@@ -216,6 +220,10 @@ define(function(require, exports, module) {
      */
     TouchSync.prototype.getOptions = function getOptions() {
         return this.options;
+    };
+
+    TouchSync.prototype.halt = function halt() {
+      this._down = true;
     };
 
     module.exports = TouchSync;

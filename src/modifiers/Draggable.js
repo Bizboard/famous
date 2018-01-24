@@ -243,9 +243,15 @@ define(function(require, exports, module) {
   Draggable.prototype.setPosition = function setPosition(position, transition, callback) {
     if (this._positionState.isActive()) this._positionState.halt();
     this._positionState.set(position, transition, callback);
+    this.halt();
   };
 
-  /**
+
+  Draggable.prototype.isChangingPosition = function isChangingPosition() {
+    return this._positionState.isActive();
+  }
+
+    /**
    * Set this draggable to respond to user input.
    *
    * @method activate
@@ -273,6 +279,10 @@ define(function(require, exports, module) {
    */
   Draggable.prototype.toggle = function toggle() {
     this._active = !this._active;
+  };
+
+  Draggable.prototype.halt = function toggle() {
+    this.sync.halt();
   };
 
 
