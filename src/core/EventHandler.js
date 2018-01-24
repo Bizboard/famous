@@ -217,7 +217,7 @@ define(function(require, exports, module) {
       this.upstream.push(source);
       for (var type in this.upstreamListeners) {
         var handler = this.upstreamListeners[type];
-        source.on(type, this.upstreamListeners[type], options);
+        source.on(type, handler, options);
       }
     }
     return this;
