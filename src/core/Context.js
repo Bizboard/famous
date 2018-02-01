@@ -12,6 +12,7 @@ define(function (require, exports, module) {
   var EventHandler = require('./EventHandler');
   var ElementAllocator = require('./ElementAllocator');
   var Transform = require('./Transform');
+  var DOMBuffer = require('./DOMBuffer.js');
   var Transitionable = require('../transitions/Transitionable');
 
   var _zeroZero = [0, 0];
@@ -24,10 +25,8 @@ define(function (require, exports, module) {
     return [element.clientWidth, element.clientHeight];
   }
 
-  var _setPerspective = usePrefix ? function (element, perspective) {
-      element.style.webkitPerspective = perspective ? perspective.toFixed() + 'px' : '';
-    } : function (element, perspective) {
-      element.style.perspective = perspective ? perspective.toFixed() + 'px' : '';
+  var _setPerspective = function (element, perspective) {
+    DOMBuffer.assignProperty(element.style, usePrefix ? 'webkitPerspective' : 'perspective', perspective ? perspective.toFixed() + 'px' : '');
     };
 
   /**
