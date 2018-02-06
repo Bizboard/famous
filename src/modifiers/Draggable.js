@@ -136,6 +136,8 @@ define(function(require, exports, module) {
     this._differential[0] -= newDifferential[0];
     this._differential[1] -= newDifferential[1];
 
+    this._lastDifferential = newDifferential;
+
     var pos = this.getPosition();
 
     //modify position, retain reference
@@ -156,9 +158,10 @@ define(function(require, exports, module) {
     this.eventOutput.emit('update', {position : pos});
   }
 
+
   function _handleEnd(data) {
     if (!this._active) return;
-    this.eventOutput.emit('end', {data: data, position : this.getPosition()});
+    this.eventOutput.emit('end', {data: data, position : this.getPosition(), velocity: this._lastDifferential});
   }
 
   function _bindEvents() {
@@ -200,16 +203,16 @@ define(function(require, exports, module) {
   };
 
   Draggable.prototype.getProjectionParameter = function adjustProjectionParameter(options) {
-      var actualProjection = 0;
-      if (options.projection !== undefined) {
-        var proj = options.projection || [];
+    var actualProjection = 0;
+    if (options.projection !== undefined) {
+      var proj = options.projection || [];
       ['x', 'y'].forEach(function(val) {
         if (proj.indexOf(val) !== -1) actualProjection |= _direction[val];
       });
     } else {
-        /* 1 & 2 */
-        return 3;
-      }
+      /* 1 & 2 */
+      return 3;
+    }
     return actualProjection;
   }
 
@@ -251,7 +254,7 @@ define(function(require, exports, module) {
     return this._positionState.isActive();
   }
 
-    /**
+  /**
    * Set this draggable to respond to user input.
    *
    * @method activate
@@ -300,7 +303,7 @@ define(function(require, exports, module) {
     }
     return axis;
   }
-    /**
+  /**
    * Return render spec for this Modifier, applying to the provided
    *    target component.  This is similar to render() for Surfaces.
    *
