@@ -135,8 +135,16 @@ define(function (require, exports, module) {
 
     eventHandler.emit('postrender');
 
+    if(this._shouldTakeDoubleStep){
+      this._shouldTakeDoubleStep = false;
+      this.step()
+    }
 
   };
+
+  Engine.doubleStep = function() {
+    this._shouldTakeDoubleStep = true;
+  }
 
   /**
    * @example
